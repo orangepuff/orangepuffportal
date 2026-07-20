@@ -1,9 +1,5 @@
-# NuGet Trusted Publishing (OIDC, no stored API key) — mirrors the pattern used by the sibling
-# orangepuff/DiagnosticLog repo. NOT YET VERIFIED against that repo's actual working workflow
-# (this session could not read it — access was declined). Before relying on this to actually
-# publish, diff it against DiagnosticLog's .github/workflows/publish.yml and fix any drift
-# (action name/version, exact trusted-publishing exchange step) — see also nuget.org's own
-# Trusted Publishing setup docs for this repo/owner.
+# NuGet Trusted Publishing (OIDC, no stored API key) — verified against the sibling
+# orangepuff/DiagnosticLog repo's working publish.yml.
 #
 # Triggered by pushing a branch named Release/vX.Y.Z — packs and publishes all five
 # OrangepuffPortal.* packages at that exact version.
@@ -54,11 +50,11 @@ jobs:
             dotnet pack "$proj" -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           done
 
-      # TODO(verify): confirm this login/push sequence against DiagnosticLog's working workflow.
       - name: NuGet login (Trusted Publishing)
+        id: nuget-login
         uses: NuGet/login@v1
         with:
           user: orangepuff
 
       - name: Push to NuGet.org
-        run: dotnet nuget push "./artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push "./artifacts/*.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
