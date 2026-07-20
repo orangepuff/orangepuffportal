@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <UserSecretsId>c9f6a8b1-1e2d-4b3a-9c7e-6f5a4d3b2c1a</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Orangepuff.Diagnostics.AspNetCore" />
+    <PackageReference Include="Orangepuff.Diagnostics.NLog" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OrangepuffPortal.Host\OrangepuffPortal.Host.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Orangepuff.Diagnostics.Abstractions" />
+    <PackageReference Include="Orangepuff.Diagnostics.NLog" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrangepuffPortal.Bff\OrangepuffPortal.Bff.csproj" />
+    <ProjectReference Include="..\OrangepuffPortal.Identity\OrangepuffPortal.Identity.csproj" />
+    <ProjectReference Include="..\OrangepuffPortal.Shared\OrangepuffPortal.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,64 @@
+# NuGet Trusted Publishing (OIDC, no stored API key) — mirrors the pattern used by the sibling
+# orangepuff/DiagnosticLog repo. NOT YET VERIFIED against that repo's actual working workflow
+# (this session could not read it — access was declined). Before relying on this to actually
+# publish, diff it against DiagnosticLog's .github/workflows/publish.yml and fix any drift
+# (action name/version, exact trusted-publishing exchange step) — see also nuget.org's own
+# Trusted Publishing setup docs for this repo/owner.
+#
+# Triggered by pushing a branch named Release/vX.Y.Z — packs and publishes all five
+# OrangepuffPortal.* packages at that exact version.
+name: Publish
+
+on:
+  push:
+    branches:
+      - "Release/v*.*.*"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from branch name
+        id: version
+        run: |
+          branch="${GITHUB_REF#refs/heads/Release/v}"
+          echo "version=$branch" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore OrangepuffPortal.slnx
+
+      - name: Build
+        run: dotnet build OrangepuffPortal.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test OrangepuffPortal.slnx --no-build -c Release
+
+      - name: Pack
+        run: |
+          for proj in \
+            src/OrangepuffPortal.Shared/OrangepuffPortal.Shared.csproj \
+            src/OrangepuffPortal.Identity.Contract/OrangepuffPortal.Identity.Contract.csproj \
+            src/OrangepuffPortal.Identity/OrangepuffPortal.Identity.csproj \
+            src/OrangepuffPortal.Bff/OrangepuffPortal.Bff.csproj \
+            src/OrangepuffPortal.Host/OrangepuffPortal.Host.csproj ; do
+            dotnet pack "$proj" -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          done
+
+      # TODO(verify): confirm this login/push sequence against DiagnosticLog's working workflow.
+      - name: NuGet login (Trusted Publishing)
+        uses: NuGet/login@v1
+        with:
+          user: orangepuff
+
+      - name: Push to NuGet.org
+        run: dotnet nuget push "./artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --skip-duplicate

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrangepuffPortal.Identity\OrangepuffPortal.Identity.csproj" />
+    <ProjectReference Include="..\OrangepuffPortal.Identity.Contract\OrangepuffPortal.Identity.Contract.csproj" />
+  </ItemGroup>
+
+</Project>
