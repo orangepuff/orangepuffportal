@@ -24,3 +24,14 @@ jobs:
 
       - name: Test
         run: dotnet test OrangepuffPortal.slnx --no-build -c Release
+
+      - name: Pack (validate packaging, matches publish.yml's package list)
+        run: |
+          for proj in \
+            src/OrangepuffPortal.Shared/OrangepuffPortal.Shared.csproj \
+            src/OrangepuffPortal.Identity.Contract/OrangepuffPortal.Identity.Contract.csproj \
+            src/OrangepuffPortal.Identity/OrangepuffPortal.Identity.csproj \
+            src/OrangepuffPortal.Bff/OrangepuffPortal.Bff.csproj \
+            src/OrangepuffPortal.Host/OrangepuffPortal.Host.csproj ; do
+            dotnet pack "$proj" --no-build -c Release -o ./artifacts
+          done
