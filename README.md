@@ -1,16 +1,20 @@
 # OrangepuffPortal
 
-A reusable Identity/Bff-auth SDK, extracted from [OCRWeb](https://github.com/orangepuff/ocrweb)'s
-`OCRWeb.Shared`/`OCRWeb.Identity`/`OCRWeb.Bff` auth surface. Any "body app" references
-`OrangepuffPortal.Host` instead of cloning a template repo, gets identical centrally-controlled
-Identity/security behavior for free, and updates by bumping a package version.
+OrangepuffPortal is a reusable Identity and authentication SDK for ASP.NET Core + Angular
+applications, covering cookie-based sessions, Google OAuth sign-in, and user/permission management.
+
+Rather than writing and maintaining this logic separately in every application, a consuming
+application installs the `OrangepuffPortal.Host` NuGet package (backend) and the
+`@orangepuff/portal-frontend`/`-shared` npm packages (frontend). Every consuming application then
+shares identical, centrally-maintained security behavior, and picks up updates or fixes simply by
+bumping the package version — no manual code copying or merging required.
 
 ## Design
 
-- **Single in-process host.** Unlike OCRWeb's current split of a separate API + Bff process
-  talking over an internal-token-secured HTTP hop, `OrangepuffPortal.Host` runs everything —
-  Identity's MediatR handlers, cookie + Google OAuth, the `/bff/*` routes — in one process. A
-  body app references one package (`OrangepuffPortal.Host`) and gets all of it.
+- **Single in-process host.** `OrangepuffPortal.Host` runs everything — Identity's MediatR
+  handlers, cookie + Google OAuth, the `/bff/*` routes — in one process. A body app references one
+  package (`OrangepuffPortal.Host`) and gets all of it, rather than running a separate API and Bff
+  process talking over a hand-rolled internal-token-secured HTTP hop.
 - **Identity/security rules are fixed by the SDK, not overridable per body app.** Only
   deployment-level config varies (connection string, OAuth secrets, `Portal:AppName`). If a rule
   needs to change, it changes here and every consuming body app picks it up on the next version
