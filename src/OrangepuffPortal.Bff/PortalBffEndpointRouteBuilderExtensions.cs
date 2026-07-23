@@ -1,6 +1,7 @@
 using OrangepuffPortal.Bff.Endpoints.AuthEndpoints;
 using OrangepuffPortal.Bff.Endpoints.AvatarEndpoints;
 using OrangepuffPortal.Bff.Endpoints.SecurityRuleCategoryAdminEndpoints;
+using OrangepuffPortal.Bff.Endpoints.SecurityRuleItemAdminEndpoints;
 using OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints;
 using OrangepuffPortal.Bff.Infrastructure;
 
