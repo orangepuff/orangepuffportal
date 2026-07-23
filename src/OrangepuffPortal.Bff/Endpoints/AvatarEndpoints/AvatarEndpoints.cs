@@ -1,8 +1,7 @@
-using Microsoft.AspNetCore.Builder;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 using System.Security.Claims;
 
-namespace OrangepuffPortal.Bff.Endpoints
+namespace OrangepuffPortal.Bff.Endpoints.AvatarEndpoints
 {
     /// <summary>
     /// Maps /bff/me/avatar (self-service upload/clear) and /bff/users/{id}/avatar (view any user's avatar).

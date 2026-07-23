@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Builder;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 using System.Security.Claims;
 
-namespace OrangepuffPortal.Bff.Endpoints
+namespace OrangepuffPortal.Bff.Endpoints.AuthEndpoints
 {
     /// <summary>
     /// Maps /bff/login, /bff/logout, /bff/me, /bff/me/permissions.
@@ -23,9 +22,7 @@ namespace OrangepuffPortal.Bff.Endpoints
                 var properties = new AuthenticationProperties
                 {
                     RedirectUri = $"{frontendBaseUrl}{safeReturnUrl}",
-                    // Without this the cookie is session-only — it survives sliding
-                    // revalidation but is dropped the moment the browser closes, even
-                    // though ExpireTimeSpan says 8 hours.
+                    // Without this the cookie is session-only — it survives sliding revalidation but is dropped the moment the browser closes, even though ExpireTimeSpan says 8 hours.
                     IsPersistent = true,
                 };
 

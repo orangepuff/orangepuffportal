@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using OrangepuffPortal.Bff.Infrastructure;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 using System.Security.Claims;
@@ -10,19 +8,15 @@ using System.Security.Claims;
 namespace OrangepuffPortal.Bff
 {
     /// <summary>
-    /// Registers Portal's Bff-owned auth: cookie + Google OAuth schemes, the AdminOnly policy,
-    /// Data Protection key persistence, and the in-process <see cref="IIdentityGateway"/>.
+    /// Registers Portal's Bff-owned auth: cookie + Google OAuth schemes, the AdminOnly policy, Data Protection key persistence, and the in-process <see cref="IIdentityGateway"/>.
     /// </summary>
     public static class PortalBffServiceCollectionExtensions
     {
         public static IServiceCollection AddPortalBff(this IServiceCollection services, IConfiguration configuration)
         {
-            var appName = configuration["Portal:AppName"]
-                ?? throw new InvalidOperationException("Portal:AppName is not configured.");
+            var appName = configuration["Portal:AppName"] ?? throw new InvalidOperationException("Portal:AppName is not configured.");
 
-            // Persisted to a mounted volume (see docker-compose.yml) so keys survive container
-            // recreation — without this, every rebuild/restart silently invalidates every signed-in
-            // user's auth cookie (it can no longer be decrypted), forcing a fresh login.
+            // Persisted to a mounted volume (see docker-compose.yml) so keys survive container recreation — without this, every rebuild/restart silently invalidates every signed-in user's auth cookie (it can no longer be decrypted), forcing a fresh login.
             services.AddDataProtection()
                 .SetApplicationName(appName)
                 .PersistKeysToFileSystem(new DirectoryInfo("/keys"));
@@ -43,8 +37,7 @@ namespace OrangepuffPortal.Bff
                     options.SlidingExpiration = true;
                     options.ExpireTimeSpan = TimeSpan.FromHours(8);
 
-                    // /bff/me and /bff/logout are JSON-style endpoints — return plain status codes,
-                    // never redirect to a login page (the cookie handler's default challenge behavior).
+                    // /bff/me and /bff/logout are JSON-style endpoints — return plain status codes, never redirect to a login page (the cookie handler's default challenge behavior).
                     options.Events.OnRedirectToLogin = context =>
                     {
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -92,9 +85,7 @@ namespace OrangepuffPortal.Bff
                             return;
                         }
 
-                        // Re-checked every 5 minutes here (not on every request) — same staleness window
-                        // already accepted for IsActive above. Revoking admin in the DB takes effect for
-                        // an already-signed-in session within 5 minutes, not instantly.
+                        // Re-checked every 5 minutes here (not on every request) — same staleness window already accepted for IsActive above. Revoking admin in the DB takes effect for an already-signed-in session within 5 minutes, not instantly.
                         var isAdmin = await identityGateway.IsUserAdminAsync(userId, context.HttpContext.RequestAborted);
 
                         var identity = (ClaimsIdentity)context.Principal!.Identity!;
@@ -133,9 +124,8 @@ namespace OrangepuffPortal.Bff
 
                         var providerKey = context.Identity!.FindFirst(ClaimTypes.NameIdentifier)!.Value;
                         var email = context.Identity.FindFirst(ClaimTypes.Email)!.Value;
-                        // Google's claim action serializes the JSON boolean via bool.ToString() ("True", not
-                        // "true"), so a case-sensitive/exact-lowercase comparison here always misses — use
-                        // bool.TryParse (case-insensitive) instead.
+
+                        // Google's claim action serializes the JSON boolean via bool.ToString() ("True", not "true"), so a case-sensitive/exact-lowercase comparison here always misses — use bool.TryParse (case-insensitive) instead.
                         var emailVerified = bool.TryParse(context.Identity.FindFirst("email_verified")?.Value, out var verified) && verified;
                         var displayName = context.Identity.FindFirst(ClaimTypes.Name)?.Value;
 
@@ -154,8 +144,7 @@ namespace OrangepuffPortal.Bff
 
                         context.Identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, result.UserId!.Value.ToString()));
 
-                        // Without this, a freshly-signed-in admin would be locked out of /bff/admin/* for
-                        // up to 5 minutes until OnValidatePrincipal's next periodic refresh adds the claim.
+                        // Without this, a freshly-signed-in admin would be locked out of /bff/admin/* for up to 5 minutes until OnValidatePrincipal's next periodic refresh adds the claim.
                         if (await identityGateway.IsUserAdminAsync(result.UserId!.Value, context.HttpContext.RequestAborted))
                         {
                             context.Identity.AddClaim(new Claim(PortalBffConstants.AdminClaimType, "true"));

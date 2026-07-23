@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Routing;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 
-namespace OrangepuffPortal.Bff.Endpoints
+namespace OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints
 {
     /// <summary>
     /// Maps /bff/admin/users onto the Identity module's application layer.

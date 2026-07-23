@@ -10,10 +10,8 @@ using OrangepuffPortal.Shared.Auditing;
 namespace OrangepuffPortal.Host
 {
     /// <summary>
-    /// Umbrella registration for everything OrangepuffPortal owns: the real <see cref="ICurrentUser"/>,
-    /// auto-stamped transaction logging, the Identity module, and Bff-owned auth.
-    /// Requires the host to have already called AddDiagnostics()/AddDiagnosticsAspNetCore() itself
-    /// (Identity's command handlers take a hard dependency on <see cref="ITransactionLogger"/>).
+    /// Umbrella registration for everything OrangepuffPortal owns: the real <see cref="ICurrentUser"/>, auto-stamped transaction logging, the Identity module, and Bff-owned auth.
+    /// Requires the host to have already called AddDiagnostics()/AddDiagnosticsAspNetCore() itself (Identity's command handlers take a hard dependency on <see cref="ITransactionLogger"/>).
     /// </summary>
     public static class PortalServiceCollectionExtensions
     {
@@ -22,8 +20,7 @@ namespace OrangepuffPortal.Host
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUser, CurrentUser>();
 
-            // Auto-stamp every transaction span with the current request's user (overrides the base
-            // registration from AddDiagnostics; scoped because ICurrentUser is scoped).
+            // Auto-stamp every transaction span with the current request's user (overrides the base registration from AddDiagnostics; scoped because ICurrentUser is scoped).
             services.AddScoped<ITransactionLogger>(sp => new RequestContextTransactionLogger(
                 sp.GetRequiredService<TransactionLoggerImplementation>(),
                 sp.GetRequiredService<ICurrentUser>(),

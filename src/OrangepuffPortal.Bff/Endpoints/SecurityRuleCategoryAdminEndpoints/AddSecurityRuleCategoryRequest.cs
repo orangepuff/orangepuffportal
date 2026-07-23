@@ -1,4 +1,4 @@
-namespace OrangepuffPortal.Bff.Endpoints
+namespace OrangepuffPortal.Bff.Endpoints.SecurityRuleCategoryAdminEndpoints
 {
     public record AddSecurityRuleCategoryRequest(string CategoryDesc, string? TextCode);
 }
