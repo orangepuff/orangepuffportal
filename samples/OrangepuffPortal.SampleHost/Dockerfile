@@ -18,7 +18,7 @@ RUN dotnet publish "samples/OrangepuffPortal.SampleHost/OrangepuffPortal.SampleH
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8081
+ENV ASPNETCORE_URLS=https://+:8081
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "OrangepuffPortal.SampleHost.dll"]
