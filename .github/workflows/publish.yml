@@ -66,6 +66,13 @@ jobs:
           node-version: "22.x"
           registry-url: "https://registry.npmjs.org"
 
+      # npm Trusted Publishing (OIDC) needs npm CLI >= 11.5.1; Node 22.x doesn't bundle that by
+      # default, and an older CLI silently skips the OIDC exchange instead of erroring, so
+      # `npm publish` sends an unauthenticated request and npmjs.org replies 404 (not 401/403,
+      # to avoid leaking whether a scoped package exists).
+      - name: Upgrade npm for Trusted Publishing support
+        run: npm install -g npm@latest
+
       # Frontend.Shared must build (and be packed into a .tgz) before Frontend, which
       # depends on it via a local file: tarball path.
       - name: Version + build @orangepuff/portal-frontend-shared
