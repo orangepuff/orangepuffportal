@@ -53,8 +53,14 @@ jobs:
           npm install
           npm run build
 
+      # package-lock.json's locked integrity hash for the Shared .tgz was computed on whatever
+      # machine last regenerated it; ng-packagr's output isn't byte-identical across OS (source
+      # line endings differ on checkout — CRLF on Windows, LF on Linux — which flows into the
+      # bundled sourcemaps), so trusting that hash here breaks on any dependency
+      # rebuilt in this job. Drop the lockfile so npm hashes the .tgz just built above instead.
       - name: Build OrangepuffPortal.Frontend
         working-directory: src/OrangepuffPortal.Frontend
         run: |
+          rm -f package-lock.json
           npm install
           npm run build
