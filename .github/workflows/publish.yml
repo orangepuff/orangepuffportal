@@ -1,8 +1,10 @@
 # NuGet Trusted Publishing (OIDC, no stored API key) — verified against the sibling
-# orangepuff/DiagnosticLog repo's working publish.yml.
+# orangepuff/DiagnosticLog repo's working publish.yml. Same OIDC approach for the two npm
+# packages, via npm's own Trusted Publishing support.
 #
 # Triggered by pushing a branch named Release/vX.Y.Z — packs and publishes all five
-# OrangepuffPortal.* packages at that exact version.
+# OrangepuffPortal.* NuGet packages plus the two @orangepuff/portal-frontend* npm packages,
+# all at that exact version.
 name: Publish
 
 on:
@@ -58,3 +60,38 @@ jobs:
 
       - name: Push to NuGet.org
         run: dotnet nuget push "./artifacts/*.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org"
+
+      # Frontend.Shared must build (and be packed into a .tgz) before Frontend, which
+      # depends on it via a local file: tarball path.
+      - name: Version + build @orangepuff/portal-frontend-shared
+        working-directory: src/OrangepuffPortal.Frontend.Shared
+        run: |
+          npm --prefix projects/portal-frontend-shared pkg set version=${{ steps.version.outputs.version }}
+          npm install
+          npm run build
+
+      - name: Version + build @orangepuff/portal-frontend
+        working-directory: src/OrangepuffPortal.Frontend
+        run: |
+          npm --prefix projects/portal-frontend pkg set version=${{ steps.version.outputs.version }}
+          # The just-built Shared tarball's filename now embeds this run's version, not the
+          # 0.0.1 placeholder committed in package.json for local dev — repoint at it exactly.
+          SHARED_TARBALL=$(ls ../OrangepuffPortal.Frontend.Shared/dist/portal-frontend-shared/*.tgz | xargs -n1 basename)
+          npm pkg set "dependencies.@orangepuff/portal-frontend-shared=file:../OrangepuffPortal.Frontend.Shared/dist/portal-frontend-shared/$SHARED_TARBALL"
+          npm install
+          npm run build
+
+      # npm Trusted Publishing (OIDC) — mirrors the NuGet login above, no stored token.
+      # Requires each package's "Trusted Publisher" configured on npmjs.com to this repo/workflow.
+      - name: Publish @orangepuff/portal-frontend-shared to npm
+        working-directory: src/OrangepuffPortal.Frontend.Shared/dist/portal-frontend-shared
+        run: npm publish --access public
+
+      - name: Publish @orangepuff/portal-frontend to npm
+        working-directory: src/OrangepuffPortal.Frontend/dist/portal-frontend
+        run: npm publish --access public

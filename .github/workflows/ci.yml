@@ -35,3 +35,32 @@ jobs:
             src/OrangepuffPortal.Host/OrangepuffPortal.Host.csproj ; do
             dotnet pack "$proj" --no-build -c Release -o ./artifacts
           done
+
+  build-frontend-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      # Frontend.Shared must build (and be packed into a .tgz) before Frontend, which
+      # depends on it via a local file: tarball path — same order publish.yml uses.
+      - name: Build OrangepuffPortal.Frontend.Shared
+        working-directory: src/OrangepuffPortal.Frontend.Shared
+        run: |
+          npm install
+          npm run build
+
+      # package-lock.json's locked integrity hash for the Shared .tgz was computed on whatever
+      # machine last regenerated it; ng-packagr's output isn't byte-identical across OS (source
+      # line endings differ on checkout — CRLF on Windows, LF on Linux — which flows into the
+      # bundled sourcemaps), so trusting that hash here breaks on any dependency
+      # rebuilt in this job. Drop the lockfile so npm hashes the .tgz just built above instead.
+      - name: Build OrangepuffPortal.Frontend
+        working-directory: src/OrangepuffPortal.Frontend
+        run: |
+          rm -f package-lock.json
+          npm install
+          npm run build

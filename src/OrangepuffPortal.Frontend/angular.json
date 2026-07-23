@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": "17c03a57-12fd-4813-860e-3d1c5d0e43b7"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "OrangepuffPortal.Frontend": {
+      "projectType": "library",
+      "root": "projects/portal-frontend",
+      "sourceRoot": "projects/portal-frontend/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/portal-frontend/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/portal-frontend/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/portal-frontend/tsconfig.spec.json"
+          }
+        }
+      }
+    }
+  }
+}
