@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Routing;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 
-namespace OrangepuffPortal.Bff.Endpoints
+namespace OrangepuffPortal.Bff.Endpoints.SecurityRuleItemAdminEndpoints
 {
     /// <summary>
     /// Maps /bff/admin/security-rule-items onto the Identity module's application layer.

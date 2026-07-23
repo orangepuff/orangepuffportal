@@ -19,9 +19,7 @@ public class RequestContextTransactionLogger(ITransactionLogger inner, ICurrentU
         }
         catch (InvalidOperationException)
         {
-            // No resolvable user for this request (e.g. the Google provisioning call, which is
-            // authenticated but intentionally carries no sub claim yet) — leave sUser unset
-            // rather than fail the request just because logging couldn't attribute an actor.
+            // No resolvable user for this request (e.g. the Google provisioning call, which is authenticated but intentionally carries no sub claim yet) — leave sUser unset rather than fail the request just because logging couldn't attribute an actor.
         }
 
         var request = httpContextAccessor.HttpContext?.Request;

@@ -13,9 +13,7 @@ internal sealed class IdentityPortalModule : IPortalModule
 {
     public string Name => "Identity";
 
-    public async Task MigrateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) =>
-        await serviceProvider.GetRequiredService<UserDbContext>().Database.MigrateAsync(cancellationToken);
+    public async Task MigrateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) => await serviceProvider.GetRequiredService<UserDbContext>().Database.MigrateAsync(cancellationToken);
 
-    public async Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) =>
-        await serviceProvider.GetRequiredService<UserDbSeeder>().SeedAsync(cancellationToken);
+    public async Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) => await serviceProvider.GetRequiredService<UserDbSeeder>().SeedAsync(cancellationToken);
 }

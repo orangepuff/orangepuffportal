@@ -1,12 +1,13 @@
-using Microsoft.AspNetCore.Builder;
-using OrangepuffPortal.Bff.Endpoints;
+using OrangepuffPortal.Bff.Endpoints.AuthEndpoints;
+using OrangepuffPortal.Bff.Endpoints.AvatarEndpoints;
+using OrangepuffPortal.Bff.Endpoints.SecurityRuleCategoryAdminEndpoints;
+using OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints;
 using OrangepuffPortal.Bff.Infrastructure;
 
 namespace OrangepuffPortal.Bff
 {
     /// <summary>
-    /// Maps Portal's Bff-owned routes: /bff/login, /bff/logout, /bff/me(/permissions),
-    /// /bff/me/avatar, /bff/users/{id}/avatar, and the AdminOnly-gated /bff/admin/* group.
+    /// Maps Portal's Bff-owned routes: /bff/login, /bff/logout, /bff/me(/permissions), /bff/me/avatar, /bff/users/{id}/avatar, and the AdminOnly-gated /bff/admin/* group.
     /// </summary>
     public static class PortalBffEndpointRouteBuilderExtensions
     {

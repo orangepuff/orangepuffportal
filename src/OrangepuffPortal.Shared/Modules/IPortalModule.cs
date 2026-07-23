@@ -14,6 +14,5 @@ public interface IPortalModule
     Task MigrateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default);
 
     /// <summary>Apply this module's seed data, if any. No-op by default.</summary>
-    Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) =>
-        Task.CompletedTask;
+    Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) => Task.CompletedTask;
 }

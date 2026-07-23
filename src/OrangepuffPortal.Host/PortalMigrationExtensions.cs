@@ -1,14 +1,10 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using OrangepuffPortal.Shared.Modules;
 
 namespace OrangepuffPortal.Host
 {
     /// <summary>
-    /// Runs migration + seed for every registered <see cref="IPortalModule"/> (Identity's own,
-    /// plus any body-app module that registers itself the same way), gated by a single
-    /// DoMigration flag. The database itself is assumed to exist; migrations only create/upgrade
-    /// schema and tables. Modules run in DI-registration order.
+    /// Runs migration + seed for every registered <see cref="IPortalModule"/> (Identity's own, plus any body-app module that registers itself the same way), gated by a single DoMigration flag.
+    /// The database itself is assumed to exist; migrations only create/upgrade schema and tables. Modules run in DI-registration order.
     /// </summary>
     public static class PortalMigrationExtensions
     {
