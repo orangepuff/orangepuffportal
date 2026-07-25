@@ -34,13 +34,13 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
         public async Task<GoogleProvisionResult> ProvisionGoogleUserAsync(string providerKey, string email, bool emailVerified, string? displayName, CancellationToken ct = default)
         {
             var result = await mediator.Send(new ProvisionGoogleUserCommand(providerKey, email, emailVerified, displayName), ct);
-            return new GoogleProvisionResult(result.Success, result.UserId, result.RejectionReason);
+            return new GoogleProvisionResult(result.Success, result.UserId, result.CultureCode, result.RejectionReason);
         }
 
         public async Task<PasswordSignInResult> VerifyPasswordAsync(string usernameOrEmail, string password, CancellationToken ct = default)
         {
             var result = await mediator.Send(new VerifyPasswordCommand(usernameOrEmail, password), ct);
-            return new PasswordSignInResult(result.Success, result.UserId, result.Email, result.DisplayName, result.RejectionReason);
+            return new PasswordSignInResult(result.Success, result.UserId, result.Email, result.DisplayName, result.CultureCode, result.RejectionReason);
         }
 
         public async Task<SetUserPasswordResult> SetUserPasswordAsync(int userId, string newPassword, CancellationToken ct = default)

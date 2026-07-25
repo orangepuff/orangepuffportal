@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using OrangepuffPortal.Bff.Infrastructure;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
+using OrangepuffPortal.Shared.Auditing;
 using System.Security.Claims;
 
 namespace OrangepuffPortal.Bff
@@ -143,6 +144,7 @@ namespace OrangepuffPortal.Bff
                         }
 
                         context.Identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, result.UserId!.Value.ToString()));
+                        context.Identity.AddClaim(new Claim(PortalClaimTypes.CultureCode, result.CultureCode!));
 
                         // Without this, a freshly-signed-in admin would be locked out of /bff/admin/* for up to 5 minutes until OnValidatePrincipal's next periodic refresh adds the claim.
                         if (await identityGateway.IsUserAdminAsync(result.UserId!.Value, context.HttpContext.RequestAborted))

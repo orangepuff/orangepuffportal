@@ -53,7 +53,7 @@ namespace OrangepuffPortal.Identity.Application.Commands.VerifyPassword
             }
 
             logger.LogInformation("{LogPrefix}: verified password sign-in for user {UserId}", LogPrefix, user.Id);
-            return VerifyPasswordResult.Allowed(user.Id, user.Email, user.DisplayName);
+            return VerifyPasswordResult.Allowed(user.Id, user.Email, user.DisplayName, user.CultureCode);
         }
     }
 }

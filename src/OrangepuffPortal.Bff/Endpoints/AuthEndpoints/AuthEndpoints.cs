@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using OrangepuffPortal.Bff.Infrastructure;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
+using OrangepuffPortal.Shared.Auditing;
 using System.Security.Claims;
 
 namespace OrangepuffPortal.Bff.Endpoints.AuthEndpoints
@@ -41,7 +42,12 @@ namespace OrangepuffPortal.Bff.Endpoints.AuthEndpoints
                 // Same claim shape as the Google flow's OnCreatingTicket (PortalBffServiceCollectionExtensions)
                 // so /bff/me, the AdminOnly policy, and OnValidatePrincipal's periodic re-check all behave
                 // identically regardless of which flow signed the user in.
-                var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, result.UserId!.Value.ToString()), new("lv", DateTimeOffset.UtcNow.ToString("O")) };
+                var claims = new List<Claim>
+                {
+                    new(ClaimTypes.NameIdentifier, result.UserId!.Value.ToString()),
+                    new(PortalClaimTypes.CultureCode, result.CultureCode!),
+                    new("lv", DateTimeOffset.UtcNow.ToString("O")),
+                };
 
                 if (!string.IsNullOrEmpty(result.Email))
                 {

@@ -8,4 +8,7 @@ public interface ICurrentUser
 {
     /// <summary>Id of the current user (matches the INT primary key of [identity].[Users]).</summary>
     int UserId { get; }
+
+    /// <summary>Culture code of the current user (e.g. "en-US"), sourced from [identity].[Users].sCultureCode.</summary>
+    string CultureCode { get; }
 }

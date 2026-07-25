@@ -24,7 +24,7 @@ namespace OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser
             {
                 transaction.SetUser(existingLinkedUser.Id.ToString());
                 logger.LogInformation("{LogPrefix}: resolved existing linked user {UserId}", LogPrefix, existingLinkedUser.Id);
-                return ProvisionGoogleUserResult.Allowed(existingLinkedUser.Id);
+                return ProvisionGoogleUserResult.Allowed(existingLinkedUser.Id, existingLinkedUser.CultureCode);
             }
 
             if (!request.EmailVerified)
@@ -43,7 +43,7 @@ namespace OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser
 
                 transaction.SetUser(existingUserByEmail.Id.ToString());
                 logger.LogInformation("{LogPrefix}: linked Google account to existing user {UserId}", LogPrefix, existingUserByEmail.Id);
-                return ProvisionGoogleUserResult.Allowed(existingUserByEmail.Id);
+                return ProvisionGoogleUserResult.Allowed(existingUserByEmail.Id, existingUserByEmail.CultureCode);
             }
 
             if (!await registrationPolicy.IsSelfRegistrationAllowedAsync(cancellationToken))
@@ -64,7 +64,7 @@ namespace OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser
 
             transaction.SetUser(newUser.Id.ToString());
             logger.LogInformation("{LogPrefix}: provisioned new user {UserId} from Google sign-in", LogPrefix, newUser.Id);
-            return ProvisionGoogleUserResult.Allowed(newUser.Id);
+            return ProvisionGoogleUserResult.Allowed(newUser.Id, newUser.CultureCode);
         }
     }
 }
