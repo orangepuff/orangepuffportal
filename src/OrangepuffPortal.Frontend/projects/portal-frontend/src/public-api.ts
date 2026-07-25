@@ -5,6 +5,7 @@ export * from './routes/portal-shell.routes';
 export * from './lib/auth/auth.service';
 export * from './lib/auth/auth.guard';
 export * from './lib/auth/admin.guard';
+export * from './lib/auth/own-user-or-admin.guard';
 
 export * from './lib/header/header';
 export * from './lib/home/home';
@@ -20,6 +21,7 @@ export * from './lib/admin/users/user';
 export * from './lib/admin/users/user-admin.service';
 export * from './lib/admin/users/user-list/user-list';
 export * from './lib/admin/users/user-form-dialog/user-form-dialog';
+export * from './lib/admin/users/set-password-dialog/set-password-dialog';
 
 export * from './lib/admin/security-rule-categories/security-rule-category';
 export * from './lib/admin/security-rule-categories/security-rule-category-admin.service';

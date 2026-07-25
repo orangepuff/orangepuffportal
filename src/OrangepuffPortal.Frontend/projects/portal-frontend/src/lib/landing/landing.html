@@ -13,5 +13,32 @@
   </div>
   <h1>{{ content.title }}</h1>
   <p>{{ content.tagline }}</p>
-  <button mat-flat-button type="button" (click)="signIn()">Sign in with Google</button>
+
+  @if (!showPasswordForm()) {
+    <div class="landing__actions">
+      <button mat-flat-button type="button" (click)="signInWithGoogle()">Sign in with Google</button>
+      <button mat-stroked-button type="button" (click)="togglePasswordForm()">Sign in with account</button>
+    </div>
+  } @else {
+    <form class="landing__password-form" [formGroup]="passwordForm" (ngSubmit)="submitPasswordSignIn()">
+      <mat-form-field appearance="outline">
+        <mat-label>Username/email</mat-label>
+        <input matInput formControlName="usernameOrEmail" autocomplete="username" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="current-password" />
+      </mat-form-field>
+
+      @if (errorMessage()) {
+        <p class="landing__error">{{ errorMessage() }}</p>
+      }
+
+      <div class="landing__actions">
+        <button mat-flat-button type="submit" [disabled]="passwordForm.invalid || submitting()">Sign in</button>
+        <button mat-button type="button" (click)="togglePasswordForm()">Back</button>
+      </div>
+    </form>
+  }
 </main>

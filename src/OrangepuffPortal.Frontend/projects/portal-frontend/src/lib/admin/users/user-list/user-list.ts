@@ -8,6 +8,7 @@ import { ConfirmDialog, ConfirmDialogData } from '@orangepuff/portal-frontend-sh
 import { UserAdminService } from '../user-admin.service';
 import { User } from '../user';
 import { UserFormDialog, UserFormDialogData, UserFormDialogResult } from '../user-form-dialog/user-form-dialog';
+import { SetPasswordDialog, SetPasswordDialogData } from '../set-password-dialog/set-password-dialog';
 
 @Component({
   selector: 'lib-portal-user-list',
@@ -53,7 +54,13 @@ export class UserList implements OnInit {
         }
 
         this.userAdminService
-          .add({ username: result.username, email: result.email, displayName: result.displayName, templateUserId: result.parentId })
+          .add({
+            username: result.username,
+            email: result.email,
+            displayName: result.displayName,
+            templateUserId: result.parentId,
+            password: result.password
+          })
           .subscribe((res) => {
             if (res.success) {
               this.reload();
@@ -89,6 +96,27 @@ export class UserList implements OnInit {
               this.snackBar.open(`Could not update user: ${res.rejectionReason}`, 'Dismiss');
             }
           });
+      });
+  }
+
+  protected openSetPasswordDialog(user: User): void {
+    const data: SetPasswordDialogData = { username: user.username };
+
+    this.dialog
+      .open<SetPasswordDialog, SetPasswordDialogData, string>(SetPasswordDialog, { data })
+      .afterClosed()
+      .subscribe((newPassword) => {
+        if (!newPassword) {
+          return;
+        }
+
+        this.userAdminService.setPassword(user.id, newPassword).subscribe((res) => {
+          if (res.success) {
+            this.snackBar.open(`Password updated for ${user.username}`, 'Dismiss');
+          } else {
+            this.snackBar.open(`Could not set password: ${res.rejectionReason}`, 'Dismiss');
+          }
+        });
       });
   }
 

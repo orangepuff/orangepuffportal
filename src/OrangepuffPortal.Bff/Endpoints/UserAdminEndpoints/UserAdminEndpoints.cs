@@ -18,13 +18,19 @@ namespace OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints
 
             app.MapPost("/users", async (AddUserRequest req, IIdentityGateway client, CancellationToken ct) =>
             {
-                var result = await client.AddUserAsync(req.Username, req.Email, req.DisplayName, req.TemplateUserId, ct);
+                var result = await client.AddUserAsync(req.Username, req.Email, req.DisplayName, req.TemplateUserId, req.Password, ct);
                 return Results.Ok(result);
             });
 
             app.MapPut("/users/{id:int}", async (int id, UpdateUserRequest req, IIdentityGateway client, CancellationToken ct) =>
             {
                 var result = await client.UpdateUserAsync(id, req.Email, req.DisplayName, req.IsTemplateUser, req.ParentId, ct);
+                return Results.Ok(result);
+            });
+
+            app.MapPut("/users/{id:int}/password", async (int id, SetPasswordRequest req, IIdentityGateway client, CancellationToken ct) =>
+            {
+                var result = await client.SetUserPasswordAsync(id, req.NewPassword, ct);
                 return Results.Ok(result);
             });
 

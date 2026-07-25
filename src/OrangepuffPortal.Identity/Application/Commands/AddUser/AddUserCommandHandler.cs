@@ -1,5 +1,6 @@
 using Diagnostics.Abstractions.Interfaces;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using OrangepuffPortal.Identity.Domain.Entity;
 using OrangepuffPortal.Identity.Domain.Repositories;
@@ -8,6 +9,7 @@ namespace OrangepuffPortal.Identity.Application.Commands.AddUser
 {
     public class AddUserCommandHandler(
         IUserRepository repository
+        , IPasswordHasher<User> passwordHasher
         , ITransactionLogger transactionLogger
         , ILogger<AddUserCommandHandler> logger) : IRequestHandler<AddUserCommand, AddUserResult>
     {
@@ -54,6 +56,11 @@ namespace OrangepuffPortal.Identity.Application.Commands.AddUser
             if (request.TemplateUserId is int parentId)
             {
                 newUser.SetParent(parentId, now);
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Password))
+            {
+                newUser.SetPasswordHash(passwordHasher.HashPassword(newUser, request.Password), now);
             }
 
             await repository.AddAsync(newUser, cancellationToken);

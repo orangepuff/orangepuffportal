@@ -13,6 +13,7 @@ export interface AddUserRequest {
   email: string | null;
   displayName: string | null;
   templateUserId: number | null;
+  password: string | null;
 }
 
 export interface UpdateUserRequest {

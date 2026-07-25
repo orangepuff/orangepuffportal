@@ -21,4 +21,8 @@ export class UserAdminService {
   delete(id: number) {
     return this.http.delete<UserMutationResult>(`/bff/admin/users/${id}`);
   }
+
+  setPassword(id: number, newPassword: string) {
+    return this.http.put<UserMutationResult>(`/bff/admin/users/${id}/password`, { newPassword });
+  }
 }

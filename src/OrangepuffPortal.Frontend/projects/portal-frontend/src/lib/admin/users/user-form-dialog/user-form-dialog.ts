@@ -19,6 +19,7 @@ export interface UserFormDialogResult {
   displayName: string | null;
   isTemplateUser: boolean;
   parentId: number | null;
+  password: string | null;
 }
 
 @Component({
@@ -38,7 +39,9 @@ export class UserFormDialog {
     email: new FormControl(this.data.user?.email ?? ''),
     displayName: new FormControl(this.data.user?.displayName ?? ''),
     isTemplateUser: new FormControl(this.data.user?.isTemplateUser ?? false, { nonNullable: true }),
-    parentId: new FormControl<number | null>(this.data.user?.parentId ?? null)
+    parentId: new FormControl<number | null>(this.data.user?.parentId ?? null),
+    // Only asked for on create — existing users get/change a password through the separate "Set password" action.
+    password: new FormControl('')
   });
 
   protected save(): void {
@@ -52,7 +55,8 @@ export class UserFormDialog {
       email: value.email || null,
       displayName: value.displayName || null,
       isTemplateUser: value.isTemplateUser,
-      parentId: value.isTemplateUser ? null : value.parentId
+      parentId: value.isTemplateUser ? null : value.parentId,
+      password: this.isEdit ? null : value.password || null
     });
   }
 

@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using OrangepuffPortal.Bff.Infrastructure;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 using System.Security.Claims;
 
 namespace OrangepuffPortal.Bff.Endpoints.AuthEndpoints
 {
     /// <summary>
-    /// Maps /bff/login, /bff/logout, /bff/me, /bff/me/permissions.
+    /// Maps /bff/login, /bff/login/password, /bff/logout, /bff/me, /bff/me/permissions.
     /// </summary>
     public static class AuthEndpoints
     {
@@ -27,6 +28,38 @@ namespace OrangepuffPortal.Bff.Endpoints.AuthEndpoints
                 };
 
                 return Results.Challenge(properties, [GoogleDefaults.AuthenticationScheme]);
+            });
+
+            app.MapPost("/bff/login/password", async (PasswordSignInRequest request, IIdentityGateway client, HttpContext context, CancellationToken ct) =>
+            {
+                var result = await client.VerifyPasswordAsync(request.UsernameOrEmail, request.Password, ct);
+                if (!result.Success)
+                {
+                    return Results.Unauthorized();
+                }
+
+                // Same claim shape as the Google flow's OnCreatingTicket (PortalBffServiceCollectionExtensions)
+                // so /bff/me, the AdminOnly policy, and OnValidatePrincipal's periodic re-check all behave
+                // identically regardless of which flow signed the user in.
+                var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, result.UserId!.Value.ToString()), new("lv", DateTimeOffset.UtcNow.ToString("O")) };
+
+                if (!string.IsNullOrEmpty(result.Email))
+                {
+                    claims.Add(new Claim(ClaimTypes.Email, result.Email));
+                }
+                if (!string.IsNullOrEmpty(result.DisplayName))
+                {
+                    claims.Add(new Claim(ClaimTypes.Name, result.DisplayName));
+                }
+                if (await client.IsUserAdminAsync(result.UserId!.Value, ct))
+                {
+                    claims.Add(new Claim(PortalBffConstants.AdminClaimType, "true"));
+                }
+
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = true });
+
+                return Results.NoContent();
             });
 
             app.MapPost("/bff/logout", async (HttpContext context) =>

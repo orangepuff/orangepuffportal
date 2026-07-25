@@ -6,10 +6,12 @@ using OrangepuffPortal.Identity.Application.Commands.DeleteSecurityRuleCategory;
 using OrangepuffPortal.Identity.Application.Commands.DeleteSecurityRuleItem;
 using OrangepuffPortal.Identity.Application.Commands.DeleteUser;
 using OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser;
+using OrangepuffPortal.Identity.Application.Commands.SetUserPassword;
 using OrangepuffPortal.Identity.Application.Commands.UpdateSecurityRuleCategory;
 using OrangepuffPortal.Identity.Application.Commands.UpdateSecurityRuleItem;
 using OrangepuffPortal.Identity.Application.Commands.UpdateUser;
 using OrangepuffPortal.Identity.Application.Commands.UpdateUserAvatar;
+using OrangepuffPortal.Identity.Application.Commands.VerifyPassword;
 using OrangepuffPortal.Identity.Application.Queries.GetEffectivePermissions;
 using OrangepuffPortal.Identity.Application.Queries.GetUserAvatar;
 using OrangepuffPortal.Identity.Application.Queries.IsUserActive;
@@ -33,6 +35,18 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
         {
             var result = await mediator.Send(new ProvisionGoogleUserCommand(providerKey, email, emailVerified, displayName), ct);
             return new GoogleProvisionResult(result.Success, result.UserId, result.RejectionReason);
+        }
+
+        public async Task<PasswordSignInResult> VerifyPasswordAsync(string usernameOrEmail, string password, CancellationToken ct = default)
+        {
+            var result = await mediator.Send(new VerifyPasswordCommand(usernameOrEmail, password), ct);
+            return new PasswordSignInResult(result.Success, result.UserId, result.Email, result.DisplayName, result.RejectionReason);
+        }
+
+        public async Task<SetUserPasswordResult> SetUserPasswordAsync(int userId, string newPassword, CancellationToken ct = default)
+        {
+            var result = await mediator.Send(new SetUserPasswordCommand(userId, newPassword), ct);
+            return new SetUserPasswordResult(result.Success, result.RejectionReason);
         }
 
         public Task<bool> IsUserActiveAsync(int userId, CancellationToken ct = default) =>
@@ -62,9 +76,9 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
         public Task<IReadOnlyList<SecurityRuleItemListItemDto>> ListSecurityRuleItemsAsync(int? categoryId, CancellationToken ct = default) =>
             mediator.Send(new ListSecurityRuleItemsQuery(categoryId), ct);
 
-        public async Task<AddUserResult> AddUserAsync(string username, string? email, string? displayName, int? templateUserId, CancellationToken ct = default)
+        public async Task<AddUserResult> AddUserAsync(string username, string? email, string? displayName, int? templateUserId, string? password, CancellationToken ct = default)
         {
-            var result = await mediator.Send(new AddUserCommand(username, email, displayName, templateUserId), ct);
+            var result = await mediator.Send(new AddUserCommand(username, email, displayName, templateUserId, password), ct);
             return new AddUserResult(result.Success, result.UserId, result.RejectionReason);
         }
 

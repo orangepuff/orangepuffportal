@@ -21,6 +21,10 @@ export class AuthService {
     return this.identityService.checkSession();
   }
 
+  passwordSignIn(usernameOrEmail: string, password: string) {
+    return this.identityService.passwordSignIn(usernameOrEmail, password);
+  }
+
   login(returnUrl: string): void {
     // Absolute URL to the Bff host's real origin, not a relative path through the dev-server proxy.
     // /bff/login sets an OAuth correlation cookie that must round-trip back on /signin-google,

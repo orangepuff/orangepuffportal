@@ -8,6 +8,8 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
     public interface IIdentityGateway
     {
         Task<GoogleProvisionResult> ProvisionGoogleUserAsync(string providerKey, string email, bool emailVerified, string? displayName, CancellationToken ct = default);
+        Task<PasswordSignInResult> VerifyPasswordAsync(string usernameOrEmail, string password, CancellationToken ct = default);
+        Task<SetUserPasswordResult> SetUserPasswordAsync(int userId, string newPassword, CancellationToken ct = default);
         Task<bool> IsUserActiveAsync(int userId, CancellationToken ct = default);
         Task<bool> IsUserAdminAsync(int userId, CancellationToken ct = default);
 
@@ -20,7 +22,7 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
         Task<IReadOnlyList<SecurityRuleCategoryListItemDto>> ListSecurityRuleCategoriesAsync(CancellationToken ct = default);
         Task<IReadOnlyList<SecurityRuleItemListItemDto>> ListSecurityRuleItemsAsync(int? categoryId, CancellationToken ct = default);
 
-        Task<AddUserResult> AddUserAsync(string username, string? email, string? displayName, int? templateUserId, CancellationToken ct = default);
+        Task<AddUserResult> AddUserAsync(string username, string? email, string? displayName, int? templateUserId, string? password, CancellationToken ct = default);
         Task<UpdateUserResult> UpdateUserAsync(int userId, string? email, string? displayName, bool isTemplateUser, int? parentId, CancellationToken ct = default);
         Task<DeleteUserResult> DeleteUserAsync(int userId, CancellationToken ct = default);
 

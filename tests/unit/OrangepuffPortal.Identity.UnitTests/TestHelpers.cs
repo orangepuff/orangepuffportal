@@ -1,5 +1,7 @@
 using Diagnostics.Abstractions.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Moq;
+using OrangepuffPortal.Identity.Domain.Entity;
 
 namespace OrangepuffPortal.Identity.UnitTests;
 
@@ -13,4 +15,7 @@ internal static class TestHelpers
         logger.Setup(l => l.BeginTransaction(It.IsAny<string>(), It.IsAny<string?>())).Returns(scope.Object);
         return logger;
     }
+
+    /// <summary>Real hasher, not a mock — it's a pure algorithm with no DI dependencies of its own.</summary>
+    public static IPasswordHasher<User> CreatePasswordHasher() => new PasswordHasher<User>();
 }
