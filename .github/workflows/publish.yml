@@ -66,6 +66,13 @@ jobs:
           node-version: "22.x"
           registry-url: "https://registry.npmjs.org"
 
+      # Node 22's bundled npm (v10) doesn't speak the OIDC handshake that npm Trusted
+      # Publishing requires (npm >= 11.5.1) — without this, `npm publish` below silently
+      # skips OIDC and falls back to an unauthenticated request, which npm's registry
+      # reports as a misleading 404 "not in this registry" instead of an auth error.
+      - name: Ensure npm supports OIDC trusted publishing
+        run: npm install -g npm@latest
+
       # Frontend.Shared must build (and be packed into a .tgz) before Frontend, which
       # depends on it via a local file: tarball path.
       - name: Version + build @orangepuff/portal-frontend-shared
