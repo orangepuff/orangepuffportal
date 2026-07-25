@@ -20,6 +20,10 @@ public static class ModuleRegistration
             opt.UseSqlServer(connectionString, sql =>
                 sql.MigrationsHistoryTable("__EFMigrationsHistory", ConfigTextDbContext.Schema)));
 
+        // ConfigTextCache needs IMemoryCache — registered here rather than assumed already present,
+        // so this module doesn't depend on the host having called AddMemoryCache() itself.
+        services.AddMemoryCache();
+
         services.AddScoped<IConfigTextRepository, ConfigTextRepository>();
         services.AddSingleton<ConfigTextCache>();
         services.AddScoped<IConfigTextWriter, ConfigTextWriter>();
