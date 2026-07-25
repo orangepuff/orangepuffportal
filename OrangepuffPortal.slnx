@@ -9,6 +9,8 @@
     <Project Path="src/OrangepuffPortal.Shared/OrangepuffPortal.Shared.csproj" />
     <Project Path="src/OrangepuffPortal.Identity.Contract/OrangepuffPortal.Identity.Contract.csproj" />
     <Project Path="src/OrangepuffPortal.Identity/OrangepuffPortal.Identity.csproj" />
+    <Project Path="src/OrangepuffPortal.ConfigText.Contract/OrangepuffPortal.ConfigText.Contract.csproj" />
+    <Project Path="src/OrangepuffPortal.ConfigText/OrangepuffPortal.ConfigText.csproj" />
     <Project Path="src/OrangepuffPortal.Bff/OrangepuffPortal.Bff.csproj" />
     <Project Path="src/OrangepuffPortal.Host/OrangepuffPortal.Host.csproj" />
   </Folder>
