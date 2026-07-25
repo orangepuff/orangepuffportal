@@ -79,6 +79,11 @@ jobs:
         working-directory: src/OrangepuffPortal.Frontend
         run: |
           npm --prefix projects/portal-frontend pkg set version=${{ steps.version.outputs.version }}
+          # The published peerDependencies range also needs to track this run's version — it's
+          # committed in source as the ^0.0.1 local-dev placeholder and, unlike `version` above,
+          # was never being bumped here, so every published portal-frontend kept demanding
+          # portal-frontend-shared@^0.0.1 forever regardless of what was actually built against it.
+          npm --prefix projects/portal-frontend pkg set "peerDependencies.@orangepuff/portal-frontend-shared=^${{ steps.version.outputs.version }}"
           # The just-built Shared tarball's filename now embeds this run's version, not the
           # 0.0.1 placeholder committed in package.json for local dev — repoint at it exactly.
           SHARED_TARBALL=$(ls ../OrangepuffPortal.Frontend.Shared/dist/portal-frontend-shared/*.tgz | xargs -n1 basename)
