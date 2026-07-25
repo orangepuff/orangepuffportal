@@ -2,7 +2,7 @@
 # orangepuff/DiagnosticLog repo's working publish.yml. Same OIDC approach for the two npm
 # packages, via npm's own Trusted Publishing support.
 #
-# Triggered by pushing a branch named Release/vX.Y.Z — packs and publishes all seven
+# Triggered by pushing a branch named Release/vX.Y.Z — packs and publishes all nine
 # OrangepuffPortal.* NuGet packages plus the two @orangepuff/portal-frontend* npm packages,
 # all at that exact version.
 name: Publish
@@ -49,6 +49,8 @@ jobs:
             src/OrangepuffPortal.Identity/OrangepuffPortal.Identity.csproj \
             src/OrangepuffPortal.ConfigText.Contract/OrangepuffPortal.ConfigText.Contract.csproj \
             src/OrangepuffPortal.ConfigText/OrangepuffPortal.ConfigText.csproj \
+            src/OrangepuffPortal.Config.Contract/OrangepuffPortal.Config.Contract.csproj \
+            src/OrangepuffPortal.Config/OrangepuffPortal.Config.csproj \
             src/OrangepuffPortal.Bff/OrangepuffPortal.Bff.csproj \
             src/OrangepuffPortal.Host/OrangepuffPortal.Host.csproj ; do
             dotnet pack "$proj" -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
