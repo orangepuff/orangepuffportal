@@ -10,3 +10,7 @@ export * from './lib/avatar/avatar';
 
 export * from './lib/confirm-dialog/confirm-dialog';
 export * from './lib/confirm-dialog/confirm-dialog-data';
+
+export * from './lib/button/button';
+
+export * from './lib/text-input/text-input';

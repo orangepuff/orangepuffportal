@@ -1,0 +1,5 @@
+@if (variant() === 'primary') {
+  <button mat-flat-button [type]="type()" [disabled]="disabled()" (click)="onClick()">{{ label() }}</button>
+} @else {
+  <button mat-button [type]="type()" [disabled]="disabled()" (click)="onClick()">{{ label() }}</button>
+}
