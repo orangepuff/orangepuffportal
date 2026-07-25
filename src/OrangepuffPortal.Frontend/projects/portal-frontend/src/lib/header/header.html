@@ -13,7 +13,7 @@
     </button>
 
     <mat-menu #userMenu="matMenu">
-      <a mat-menu-item routerLink="/settings">
+      <a mat-menu-item [routerLink]="['/Users', authService.currentUser()!.userId, 'Settings']">
         <mat-icon>settings</mat-icon>
         Settings
       </a>

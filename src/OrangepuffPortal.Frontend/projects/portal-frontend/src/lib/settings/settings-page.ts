@@ -1,4 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
+import { map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Avatar, IdentityService } from '@orangepuff/portal-frontend-shared';
@@ -11,11 +14,21 @@ import { UserSettingsService } from './user-settings.service';
   styleUrl: './settings-page.scss'
 })
 export class SettingsPage {
+  private readonly route = inject(ActivatedRoute);
   protected readonly identityService = inject(IdentityService);
   private readonly userSettingsService = inject(UserSettingsService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly avatarVersion = signal(0);
+
+  /** Reactive to param changes (not just `.snapshot`) since the guard lets the router reuse this component across /Users/:userId/Settings navigations. */
+  protected readonly targetUserId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('userId') ?? '')),
+    { initialValue: this.route.snapshot.paramMap.get('userId') ?? '' }
+  );
+
+  /** Avatar upload/remove only exist for the signed-in user's own page — there's no Bff endpoint for an admin to mutate someone else's avatar. */
+  protected readonly isOwnSettings = computed(() => this.targetUserId() === this.identityService.currentUser()?.userId);
 
   protected onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
