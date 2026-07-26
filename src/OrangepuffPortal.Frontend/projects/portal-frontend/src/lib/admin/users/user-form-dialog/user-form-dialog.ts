@@ -17,6 +17,7 @@ export interface UserFormDialogResult {
   username: string;
   email: string | null;
   displayName: string | null;
+  isActive: boolean;
   isTemplateUser: boolean;
   parentId: number | null;
   password: string | null;
@@ -38,6 +39,7 @@ export class UserFormDialog {
     username: new FormControl(this.data.user?.username ?? '', { nonNullable: true, validators: [Validators.required] }),
     email: new FormControl(this.data.user?.email ?? ''),
     displayName: new FormControl(this.data.user?.displayName ?? ''),
+    isActive: new FormControl(this.data.user?.isActive ?? true, { nonNullable: true }),
     isTemplateUser: new FormControl(this.data.user?.isTemplateUser ?? false, { nonNullable: true }),
     parentId: new FormControl<number | null>(this.data.user?.parentId ?? null),
     // Only asked for on create — existing users get/change a password through the separate "Set password" action.
@@ -54,6 +56,7 @@ export class UserFormDialog {
       username: value.username,
       email: value.email || null,
       displayName: value.displayName || null,
+      isActive: value.isActive,
       isTemplateUser: value.isTemplateUser,
       parentId: value.isTemplateUser ? null : value.parentId,
       password: this.isEdit ? null : value.password || null

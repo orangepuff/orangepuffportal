@@ -56,9 +56,9 @@ public class User
         UpdatedTime = utcNow;
     }
 
-    public void Deactivate(DateTime utcNow)
+    public void SetActive(bool isActive, DateTime utcNow)
     {
-        IsActive = false;
+        IsActive = isActive;
         UpdatedTime = utcNow;
     }
 

@@ -19,6 +19,7 @@ export interface AddUserRequest {
 export interface UpdateUserRequest {
   email: string | null;
   displayName: string | null;
+  isActive: boolean;
   isTemplateUser: boolean;
   parentId: number | null;
 }

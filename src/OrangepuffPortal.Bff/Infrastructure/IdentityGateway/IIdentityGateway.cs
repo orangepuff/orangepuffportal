@@ -23,7 +23,7 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
         Task<IReadOnlyList<SecurityRuleItemListItemDto>> ListSecurityRuleItemsAsync(int? categoryId, CancellationToken ct = default);
 
         Task<AddUserResult> AddUserAsync(string username, string? email, string? displayName, int? templateUserId, string? password, CancellationToken ct = default);
-        Task<UpdateUserResult> UpdateUserAsync(int userId, string? email, string? displayName, bool isTemplateUser, int? parentId, CancellationToken ct = default);
+        Task<UpdateUserResult> UpdateUserAsync(int userId, string? email, string? displayName, bool isActive, bool isTemplateUser, int? parentId, CancellationToken ct = default);
         Task<DeleteUserResult> DeleteUserAsync(int userId, CancellationToken ct = default);
 
         Task<AddSecurityRuleCategoryResult> AddSecurityRuleCategoryAsync(string categoryDesc, string? textCode, CancellationToken ct = default);

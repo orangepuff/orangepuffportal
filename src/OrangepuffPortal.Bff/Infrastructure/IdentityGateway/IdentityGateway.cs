@@ -82,9 +82,9 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
             return new AddUserResult(result.Success, result.UserId, result.RejectionReason);
         }
 
-        public async Task<UpdateUserResult> UpdateUserAsync(int userId, string? email, string? displayName, bool isTemplateUser, int? parentId, CancellationToken ct = default)
+        public async Task<UpdateUserResult> UpdateUserAsync(int userId, string? email, string? displayName, bool isActive, bool isTemplateUser, int? parentId, CancellationToken ct = default)
         {
-            var result = await mediator.Send(new UpdateUserCommand(userId, email, displayName, isTemplateUser, parentId), ct);
+            var result = await mediator.Send(new UpdateUserCommand(userId, email, displayName, isActive, isTemplateUser, parentId), ct);
             return new UpdateUserResult(result.Success, result.RejectionReason);
         }
 

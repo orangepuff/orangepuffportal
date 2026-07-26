@@ -24,7 +24,7 @@ namespace OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints
 
             app.MapPut("/users/{id:int}", async (int id, UpdateUserRequest req, IIdentityGateway client, CancellationToken ct) =>
             {
-                var result = await client.UpdateUserAsync(id, req.Email, req.DisplayName, req.IsTemplateUser, req.ParentId, ct);
+                var result = await client.UpdateUserAsync(id, req.Email, req.DisplayName, req.IsActive, req.IsTemplateUser, req.ParentId, ct);
                 return Results.Ok(result);
             });
 

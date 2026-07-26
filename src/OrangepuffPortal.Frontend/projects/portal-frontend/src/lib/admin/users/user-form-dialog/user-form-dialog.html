@@ -25,6 +25,10 @@
       </mat-form-field>
     }
 
+    @if (isEdit) {
+      <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+    }
+
     <mat-checkbox formControlName="isTemplateUser">Usable as a permission template</mat-checkbox>
 
     @if (!form.controls.isTemplateUser.value) {

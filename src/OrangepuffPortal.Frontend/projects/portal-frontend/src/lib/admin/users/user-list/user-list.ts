@@ -86,6 +86,7 @@ export class UserList implements OnInit {
           .update(user.id, {
             email: result.email,
             displayName: result.displayName,
+            isActive: result.isActive,
             isTemplateUser: result.isTemplateUser,
             parentId: result.parentId
           })
