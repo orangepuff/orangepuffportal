@@ -79,6 +79,25 @@ public interface IConfigTextWriter
 }
 ```
 
+### The portal shell's own text
+
+Unlike a consuming app's own module text, the portal shell (`@orangepuff/portal-frontend`'s admin
+screens, header/menu, landing, settings, etc.) and every backend module's rejection-reason strings
+(Identity/Config/ConfigText `Result.Rejected("...")` codes) are seeded by the portal itself, not by
+each consuming app — `OrangepuffPortal.Host`'s `ConfigText/en-US.json` (loaded by
+`PortalShellTextSeed`, pushed via `PortalShellTextPortalModule : IPortalModule`) runs automatically
+through the same `MigratePortalModulesAsync()` pipeline as every other module, so no consuming app
+needs its own call site for it. Module names used: `OrangepuffPortal.Common` (shared action words —
+Save/Cancel/Edit/Delete/etc.), `OrangepuffPortal.Frontend` (admin-screen labels/messages, one entry
+per screen prefixed e.g. `admin.config.item.*`), and `OrangepuffPortal.Identity` /
+`OrangepuffPortal.Config` / `OrangepuffPortal.ConfigText` (one `msg` entry per rejection-reason code
+that module returns, keyed by the reason code itself — e.g. `OrangepuffPortal.Identity` /
+`username_taken`).
+
+This is seed data only for now — the Angular templates still render their own hardcoded English
+strings; nothing in `portal-frontend` fetches `/bff/config-text` yet. The table is simply populated
+and ready for that wiring to be built later.
+
 Registered as a scoped/singleton DI service by `AddConfigTextModule` (see `ModuleRegistration.cs`), flowing to
 consuming apps transitively through `OrangepuffPortal.Host`, matching how `ICurrentUser` and the Identity
 module already flow. This is an **in-process call**, not an HTTP round-trip — the consuming app's host process

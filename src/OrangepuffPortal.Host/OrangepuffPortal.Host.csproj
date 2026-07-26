@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="ConfigText\en-US.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OrangepuffPortal.Bff\OrangepuffPortal.Bff.csproj" />
     <ProjectReference Include="..\OrangepuffPortal.Config\OrangepuffPortal.Config.csproj" />
     <ProjectReference Include="..\OrangepuffPortal.ConfigText\OrangepuffPortal.ConfigText.csproj" />

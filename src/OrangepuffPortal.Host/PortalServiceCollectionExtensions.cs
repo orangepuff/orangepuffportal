@@ -6,9 +6,11 @@ using Microsoft.Extensions.DependencyInjection;
 using OrangepuffPortal.Bff;
 using OrangepuffPortal.Config.Infrastructure;
 using OrangepuffPortal.ConfigText.Infrastructure;
+using OrangepuffPortal.Host.ConfigText;
 using OrangepuffPortal.Host.Infrastructure;
 using OrangepuffPortal.Identity.Infrastructure;
 using OrangepuffPortal.Shared.Auditing;
+using OrangepuffPortal.Shared.Modules;
 
 namespace OrangepuffPortal.Host
 {
@@ -33,6 +35,11 @@ namespace OrangepuffPortal.Host
             services.AddConfigTextModule(configuration);
             services.AddConfigModule(configuration);
             services.AddPortalBff(configuration);
+
+            // Runs through the same MigratePortalModulesAsync() pipeline as every other IPortalModule —
+            // seeds the portal shell's own default text (see ConfigText/PortalShellTextPortalModule.cs)
+            // automatically at every consuming app's startup, with no extra call site required there.
+            services.AddSingleton<IPortalModule, PortalShellTextPortalModule>();
 
             // Registered once, here, for every module's assembly together — Identity publishes
             // UserCreatedNotification (OrangepuffPortal.Shared.Events) and Config subscribes to it, so a
