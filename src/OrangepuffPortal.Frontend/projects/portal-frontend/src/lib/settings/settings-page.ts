@@ -36,11 +36,14 @@ export class SettingsPage {
     { initialValue: this.route.snapshot.paramMap.get('userId') ?? '' }
   );
 
-  /** Avatar upload/remove and the profile (display name/password) forms only exist for the signed-in user's own page. */
+  /** The profile (display name/password) forms only exist for the signed-in user's own page — there's no self-service endpoint for an admin to change someone else's. */
   protected readonly isOwnSettings = computed(() => this.targetUserId() === this.identityService.currentUser()?.userId);
 
   /** Config values are editable only when the *viewer* is an admin — a normal user always sees their own values read-only, regardless of Configs.btAllowUserEdit. */
   protected readonly isAdmin = computed(() => this.identityService.currentUser()?.isAdmin ?? false);
+
+  /** Avatar upload/remove: a user can always manage their own, and an admin can also manage anyone else's. */
+  protected readonly canEditAvatar = computed(() => this.isOwnSettings() || this.isAdmin());
 
   protected readonly sections = toSignal(
     toObservable(this.targetUserId).pipe(switchMap((userId) => (userId ? this.configSettingsService.getSections(userId) : of([])))),
@@ -101,23 +104,24 @@ export class SettingsPage {
       return;
     }
 
-    this.userSettingsService.updateAvatar(file).subscribe((result) => {
-      if (result.success) {
-        this.avatarVersion.update((v) => v + 1);
-        this.snackBar.open('Avatar updated', 'Dismiss');
-      } else {
-        this.snackBar.open(`Could not update avatar: ${result.rejectionReason}`, 'Dismiss');
-      }
-    });
+    this.updateAvatar(file);
   }
 
   protected removeAvatar(): void {
-    this.userSettingsService.updateAvatar(null).subscribe((result) => {
+    this.updateAvatar(null);
+  }
+
+  private updateAvatar(file: File | null): void {
+    const request = this.isOwnSettings()
+      ? this.userSettingsService.updateAvatar(file)
+      : this.userSettingsService.updateUserAvatar(this.targetUserId(), file);
+
+    request.subscribe((result) => {
       if (result.success) {
         this.avatarVersion.update((v) => v + 1);
-        this.snackBar.open('Avatar removed', 'Dismiss');
+        this.snackBar.open(file ? 'Avatar updated' : 'Avatar removed', 'Dismiss');
       } else {
-        this.snackBar.open(`Could not remove avatar: ${result.rejectionReason}`, 'Dismiss');
+        this.snackBar.open(`Could not update avatar: ${result.rejectionReason}`, 'Dismiss');
       }
     });
   }

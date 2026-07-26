@@ -1,4 +1,5 @@
 using OrangepuffPortal.Bff.Endpoints.AuthEndpoints;
+using OrangepuffPortal.Bff.Endpoints.AvatarAdminEndpoints;
 using OrangepuffPortal.Bff.Endpoints.AvatarEndpoints;
 using OrangepuffPortal.Bff.Endpoints.ConfigAdminEndpoints;
 using OrangepuffPortal.Bff.Endpoints.ConfigEndpoints;
@@ -11,7 +12,7 @@ using OrangepuffPortal.Bff.Infrastructure;
 namespace OrangepuffPortal.Bff
 {
     /// <summary>
-    /// Maps Portal's Bff-owned routes: /bff/login, /bff/logout, /bff/me(/permissions), /bff/me/avatar, /bff/users/{id}/avatar, /bff/users/{id}/config, /bff/config-text, and the AdminOnly-gated /bff/admin/* group.
+    /// Maps Portal's Bff-owned routes: /bff/login, /bff/logout, /bff/me(/permissions), /bff/me/avatar, /bff/users/{id}/avatar, /bff/users/{id}/config, /bff/config-text, and the AdminOnly-gated /bff/admin/* group (including /bff/admin/users/{id}/avatar).
     /// </summary>
     public static class PortalBffEndpointRouteBuilderExtensions
     {
@@ -27,6 +28,7 @@ namespace OrangepuffPortal.Bff
             adminGroup.MapSecurityRuleCategoryAdminEndpoints();
             adminGroup.MapSecurityRuleItemAdminEndpoints();
             adminGroup.MapConfigAdminEndpoints();
+            adminGroup.MapAvatarAdminEndpoints();
 
             return app;
         }

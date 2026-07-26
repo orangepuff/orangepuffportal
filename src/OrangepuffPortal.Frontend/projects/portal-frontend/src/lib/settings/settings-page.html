@@ -13,7 +13,7 @@
         [version]="avatarVersion()"
       />
 
-      @if (isOwnSettings()) {
+      @if (canEditAvatar()) {
         <div class="settings-page__avatar-actions">
           <button mat-flat-button type="button" (click)="fileInput.click()">Upload photo</button>
           <button mat-button type="button" (click)="removeAvatar()">Remove</button>
