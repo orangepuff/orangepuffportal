@@ -81,6 +81,7 @@ namespace OrangepuffPortal.Identity.Application.Commands.UpdateUser
 
             var now = DateTime.UtcNow;
             user.UpdateProfile(request.Email, request.DisplayName, now);
+            user.SetActive(request.IsActive, now);
             user.SetParent(request.ParentId, now);
 
             if (request.IsTemplateUser && !user.IsTemplateUser)

@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, of, tap } from 'rxjs';
+import { catchError, of, switchMap, tap } from 'rxjs';
 import { CurrentUser } from './current-user';
 import { EffectivePermission } from './effective-permission';
 
@@ -36,6 +36,11 @@ export class IdentityService {
         return of(null);
       })
     );
+  }
+
+  /** Local username/email + password sign-in (as opposed to the Google OAuth redirect). Re-checks the session on success so `currentUser` reflects the newly signed-in account. */
+  passwordSignIn(usernameOrEmail: string, password: string) {
+    return this.http.post('/bff/login/password', { usernameOrEmail, password }).pipe(switchMap(() => this.checkSession()));
   }
 
   loadPermissions() {

@@ -13,11 +13,13 @@ export interface AddUserRequest {
   email: string | null;
   displayName: string | null;
   templateUserId: number | null;
+  password: string | null;
 }
 
 export interface UpdateUserRequest {
   email: string | null;
   displayName: string | null;
+  isActive: boolean;
   isTemplateUser: boolean;
   parentId: number | null;
 }
@@ -25,4 +27,5 @@ export interface UpdateUserRequest {
 export interface UserMutationResult {
   success: boolean;
   rejectionReason: string | null;
+  successMessage: string | null;
 }

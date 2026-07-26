@@ -6,6 +6,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { TranslatePipe } from '../../../translation/translate.pipe';
 import { SecurityRuleCategory } from '../../security-rule-categories/security-rule-category';
 import { RULE_TYPES, SecurityRuleItem } from '../security-rule-item';
 
@@ -26,7 +27,7 @@ export interface SecurityRuleItemFormDialogResult {
 
 @Component({
   selector: 'lib-portal-security-rule-item-form-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatSelectModule, TranslatePipe],
   templateUrl: './security-rule-item-form-dialog.html',
   styleUrl: './security-rule-item-form-dialog.scss'
 })
@@ -34,6 +35,7 @@ export class SecurityRuleItemFormDialog {
   private readonly dialogRef = inject(MatDialogRef<SecurityRuleItemFormDialog, SecurityRuleItemFormDialogResult>);
   protected readonly data = inject<SecurityRuleItemFormDialogData>(MAT_DIALOG_DATA);
 
+  protected readonly module = 'OrangepuffPortal.Frontend';
   protected readonly ruleTypes = RULE_TYPES;
   protected readonly isEdit = this.data.item !== null;
 

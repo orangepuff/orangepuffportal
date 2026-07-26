@@ -6,12 +6,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MediatR" />
     <PackageReference Include="Orangepuff.Diagnostics.Abstractions" />
     <PackageReference Include="Orangepuff.Diagnostics.NLog" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="ConfigText\en-US.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OrangepuffPortal.Bff\OrangepuffPortal.Bff.csproj" />
+    <ProjectReference Include="..\OrangepuffPortal.Config\OrangepuffPortal.Config.csproj" />
+    <ProjectReference Include="..\OrangepuffPortal.ConfigText\OrangepuffPortal.ConfigText.csproj" />
     <ProjectReference Include="..\OrangepuffPortal.Identity\OrangepuffPortal.Identity.csproj" />
     <ProjectReference Include="..\OrangepuffPortal.Shared\OrangepuffPortal.Shared.csproj" />
   </ItemGroup>

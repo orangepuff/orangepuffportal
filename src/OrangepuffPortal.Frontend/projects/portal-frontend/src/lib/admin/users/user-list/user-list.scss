@@ -12,3 +12,15 @@
 .user-list__table {
   width: 100%;
 }
+
+.user-list__active-icon {
+  vertical-align: middle;
+
+  &--yes {
+    color: #2e7d32;
+  }
+
+  &--no {
+    color: #c62828;
+  }
+}

@@ -28,6 +28,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.IsTemplateUser).HasColumnName("btTemplateUser").HasDefaultValue(false);
         builder.Property(x => x.ParentId).HasColumnName("iParentId");
         builder.Property(x => x.IsAdmin).HasColumnName("btAdmin").HasDefaultValue(false);
+        builder.Property(x => x.CultureCode).HasColumnName("sCultureCode").HasColumnType("varchar(10)").IsRequired().HasDefaultValue(User.DefaultCultureCode);
 
         builder.Property(x => x.InsertedTime).HasColumnName("dtInsertedTime").HasColumnType("datetime2(3)");
         builder.Property(x => x.UpdatedTime).HasColumnName("dtUpdatedTime").HasColumnType("datetime2(3)");

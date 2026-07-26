@@ -34,7 +34,10 @@ public static class ModuleRegistration
 
         services.AddSingleton<IPortalModule, IdentityPortalModule>();
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ModuleRegistration).Assembly));
+        // MediatR is registered once, for every module's assembly together, at the Host composition root
+        // (PortalServiceCollectionExtensions.AddOrangepuffPortal) — Identity's AddUserCommandHandler
+        // publishes a notification Config's module needs to receive, so a single IMediator instance has to
+        // know about both assemblies' handlers.
 
         return services;
     }

@@ -19,7 +19,7 @@ public class UpdateUserCommandHandlerTests
         var handler = new UpdateUserCommandHandler(
             userRepo.Object, Mock.Of<ISecurityUserRuleItemRepository>(), TestHelpers.CreateTransactionLogger().Object, NullLogger<UpdateUserCommandHandler>.Instance);
 
-        var result = await handler.Handle(new UpdateUserCommand(1, "new@example.com", "New Name", false, null), CancellationToken.None);
+        var result = await handler.Handle(new UpdateUserCommand(1, "new@example.com", "New Name", true, false, null), CancellationToken.None);
 
         Assert.True(result.Success);
         Assert.Equal("new@example.com", user.Email);
@@ -38,7 +38,7 @@ public class UpdateUserCommandHandlerTests
         var handler = new UpdateUserCommandHandler(
             userRepo.Object, Mock.Of<ISecurityUserRuleItemRepository>(), TestHelpers.CreateTransactionLogger().Object, NullLogger<UpdateUserCommandHandler>.Instance);
 
-        var result = await handler.Handle(new UpdateUserCommand(1, null, null, IsTemplateUser: true, ParentId: 5), CancellationToken.None);
+        var result = await handler.Handle(new UpdateUserCommand(1, null, null, IsActive: true, IsTemplateUser: true, ParentId: 5), CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("template_cannot_have_parent", result.RejectionReason);
@@ -59,7 +59,7 @@ public class UpdateUserCommandHandlerTests
         var handler = new UpdateUserCommandHandler(
             userRepo.Object, Mock.Of<ISecurityUserRuleItemRepository>(), TestHelpers.CreateTransactionLogger().Object, NullLogger<UpdateUserCommandHandler>.Instance);
 
-        var result = await handler.Handle(new UpdateUserCommand(1, null, null, false, ParentId: 5), CancellationToken.None);
+        var result = await handler.Handle(new UpdateUserCommand(1, null, null, IsActive: true, IsTemplateUser: false, ParentId: 5), CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Equal("has_dependent_users", result.RejectionReason);

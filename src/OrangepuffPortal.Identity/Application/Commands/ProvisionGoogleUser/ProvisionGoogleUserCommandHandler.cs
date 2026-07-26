@@ -3,12 +3,14 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using OrangepuffPortal.Identity.Domain.Entity;
 using OrangepuffPortal.Identity.Domain.Repositories;
+using OrangepuffPortal.Shared.Events;
 
 namespace OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser
 {
     public class ProvisionGoogleUserCommandHandler(
         IUserRepository repository
         , IUserRegistrationPolicy registrationPolicy
+        , IPublisher publisher
         , ITransactionLogger transactionLogger
         , ILogger<ProvisionGoogleUserCommandHandler> logger) : IRequestHandler<ProvisionGoogleUserCommand, ProvisionGoogleUserResult>
     {
@@ -24,7 +26,7 @@ namespace OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser
             {
                 transaction.SetUser(existingLinkedUser.Id.ToString());
                 logger.LogInformation("{LogPrefix}: resolved existing linked user {UserId}", LogPrefix, existingLinkedUser.Id);
-                return ProvisionGoogleUserResult.Allowed(existingLinkedUser.Id);
+                return ProvisionGoogleUserResult.Allowed(existingLinkedUser.Id, existingLinkedUser.CultureCode);
             }
 
             if (!request.EmailVerified)
@@ -43,7 +45,7 @@ namespace OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser
 
                 transaction.SetUser(existingUserByEmail.Id.ToString());
                 logger.LogInformation("{LogPrefix}: linked Google account to existing user {UserId}", LogPrefix, existingUserByEmail.Id);
-                return ProvisionGoogleUserResult.Allowed(existingUserByEmail.Id);
+                return ProvisionGoogleUserResult.Allowed(existingUserByEmail.Id, existingUserByEmail.CultureCode);
             }
 
             if (!await registrationPolicy.IsSelfRegistrationAllowedAsync(cancellationToken))
@@ -64,7 +66,13 @@ namespace OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser
 
             transaction.SetUser(newUser.Id.ToString());
             logger.LogInformation("{LogPrefix}: provisioned new user {UserId} from Google sign-in", LogPrefix, newUser.Id);
-            return ProvisionGoogleUserResult.Allowed(newUser.Id);
+
+            // No admin performed this — self-registration, so actor is 0 ("system"). The notification
+            // handler (Config module) swallows its own exceptions, so a hiccup applying config defaults
+            // can never fail this sign-in.
+            await publisher.Publish(new UserCreatedNotification(newUser.Id, ActorUserId: 0), cancellationToken);
+
+            return ProvisionGoogleUserResult.Allowed(newUser.Id, newUser.CultureCode);
         }
     }
 }

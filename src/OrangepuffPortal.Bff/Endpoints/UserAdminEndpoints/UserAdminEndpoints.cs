@@ -1,4 +1,5 @@
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
+using System.Security.Claims;
 
 namespace OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints
 {
@@ -16,15 +17,22 @@ namespace OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints
                 return Results.Ok(result);
             });
 
-            app.MapPost("/users", async (AddUserRequest req, IIdentityGateway client, CancellationToken ct) =>
+            app.MapPost("/users", async (AddUserRequest req, ClaimsPrincipal user, IIdentityGateway client, CancellationToken ct) =>
             {
-                var result = await client.AddUserAsync(req.Username, req.Email, req.DisplayName, req.TemplateUserId, ct);
+                var actorUserId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var result = await client.AddUserAsync(req.Username, req.Email, req.DisplayName, req.TemplateUserId, req.Password, actorUserId, ct);
                 return Results.Ok(result);
             });
 
             app.MapPut("/users/{id:int}", async (int id, UpdateUserRequest req, IIdentityGateway client, CancellationToken ct) =>
             {
-                var result = await client.UpdateUserAsync(id, req.Email, req.DisplayName, req.IsTemplateUser, req.ParentId, ct);
+                var result = await client.UpdateUserAsync(id, req.Email, req.DisplayName, req.IsActive, req.IsTemplateUser, req.ParentId, ct);
+                return Results.Ok(result);
+            });
+
+            app.MapPut("/users/{id:int}/password", async (int id, SetPasswordRequest req, IIdentityGateway client, CancellationToken ct) =>
+            {
+                var result = await client.SetUserPasswordAsync(id, req.NewPassword, ct);
                 return Results.Ok(result);
             });
 

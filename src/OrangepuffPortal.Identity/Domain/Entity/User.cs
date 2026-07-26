@@ -21,8 +21,11 @@ public class User
     public bool IsTemplateUser { get; private set; }
     public int? ParentId { get; private set; }
     public bool IsAdmin { get; private set; }
+    public string CultureCode { get; private set; } = DefaultCultureCode;
     public DateTime InsertedTime { get; private set; }
     public DateTime? UpdatedTime { get; private set; }
+
+    public const string DefaultCultureCode = "en-US";
 
     private User() { } // EF
 
@@ -32,11 +35,12 @@ public class User
         {
             throw new ArgumentException("Username is required.", nameof(username));
         }
-        
+
         Username = username.Trim();
         Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
         DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
         IsActive = true;
+        CultureCode = DefaultCultureCode;
         InsertedTime = utcNow;
     }
 
@@ -52,9 +56,9 @@ public class User
         UpdatedTime = utcNow;
     }
 
-    public void Deactivate(DateTime utcNow)
+    public void SetActive(bool isActive, DateTime utcNow)
     {
-        IsActive = false;
+        IsActive = isActive;
         UpdatedTime = utcNow;
     }
 
