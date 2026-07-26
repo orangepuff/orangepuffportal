@@ -37,7 +37,7 @@
           <button mat-flat-button type="submit" [disabled]="displayNameForm.invalid">Save display name</button>
         </form>
 
-        <form class="settings-page__form-column" [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+        <form #passwordFormRef="ngForm" class="settings-page__form-column" [formGroup]="passwordForm" (ngSubmit)="changePassword(passwordFormRef)">
           <mat-form-field appearance="outline" class="settings-page__field">
             <mat-label>Current password</mat-label>
             <input matInput type="password" formControlName="currentPassword" />

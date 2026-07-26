@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin, of, switchMap, map } from 'rxjs';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -143,7 +143,7 @@ export class SettingsPage {
     return confirmPassword.value.length > 0 && newPassword.value !== confirmPassword.value;
   }
 
-  protected changePassword(): void {
+  protected changePassword(formDirective: FormGroupDirective): void {
     if (this.passwordForm.invalid || this.passwordMismatch()) {
       return;
     }
@@ -151,7 +151,10 @@ export class SettingsPage {
     const { currentPassword, newPassword } = this.passwordForm.controls;
     this.userSettingsService.changePassword(currentPassword.value, newPassword.value).subscribe((result) => {
       if (result.success) {
-        this.passwordForm.reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        // FormGroup.reset() alone leaves the directive's `submitted` flag true, so mat-form-field's
+        // error state matcher keeps showing the now-empty required fields as invalid — resetForm()
+        // clears both the model and that flag together.
+        formDirective.resetForm();
         this.snackBar.open('Password changed', 'Dismiss');
       } else {
         this.snackBar.open(`Could not change password: ${result.rejectionReason}`, 'Dismiss');
