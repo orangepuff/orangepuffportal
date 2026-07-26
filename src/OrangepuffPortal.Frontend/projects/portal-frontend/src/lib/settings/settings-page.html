@@ -67,36 +67,33 @@
       <mat-card-content>
         @for (item of section.configs; track item.sConfigCode) {
           <div class="settings-page__config-row">
+            <label class="settings-page__config-label" [for]="item.sConfigCode">{{ item.sConfigName }}</label>
+
             @switch (item.configType) {
               @case (ConfigValueType.Boolean) {
-                <mat-checkbox [formControl]="getControl(item.sConfigCode)">{{ item.sConfigName }}</mat-checkbox>
+                <mat-checkbox [id]="item.sConfigCode" [formControl]="getControl(item.sConfigCode)" />
               }
               @case (ConfigValueType.Int) {
-                <mat-form-field appearance="outline" class="settings-page__field">
-                  <mat-label>{{ item.sConfigName }}</mat-label>
-                  <input matInput type="number" step="1" [formControl]="getControl(item.sConfigCode)" />
+                <mat-form-field appearance="outline" class="settings-page__field settings-page__field--compact">
+                  <input matInput [id]="item.sConfigCode" type="number" step="1" [formControl]="getControl(item.sConfigCode)" />
                 </mat-form-field>
               }
               @case (ConfigValueType.Decimal) {
-                <mat-form-field appearance="outline" class="settings-page__field">
-                  <mat-label>{{ item.sConfigName }}</mat-label>
-                  <input matInput type="number" step="0.001" [formControl]="getControl(item.sConfigCode)" />
+                <mat-form-field appearance="outline" class="settings-page__field settings-page__field--compact">
+                  <input matInput [id]="item.sConfigCode" type="number" step="0.001" [formControl]="getControl(item.sConfigCode)" />
                 </mat-form-field>
               }
               @default {
-                <mat-form-field appearance="outline" class="settings-page__field">
-                  <mat-label>{{ item.sConfigName }}</mat-label>
-                  <input matInput [formControl]="getControl(item.sConfigCode)" />
+                <mat-form-field appearance="outline" class="settings-page__field settings-page__field--compact">
+                  <input matInput [id]="item.sConfigCode" [formControl]="getControl(item.sConfigCode)" />
                 </mat-form-field>
               }
             }
-
-            @if (isAdmin()) {
-              <button mat-icon-button type="button" (click)="saveConfig(item)" aria-label="Save">
-                <mat-icon>save</mat-icon>
-              </button>
-            }
           </div>
+        }
+
+        @if (isAdmin()) {
+          <button mat-flat-button type="button" (click)="saveSection(section)">Save</button>
         }
       </mat-card-content>
     </mat-card>

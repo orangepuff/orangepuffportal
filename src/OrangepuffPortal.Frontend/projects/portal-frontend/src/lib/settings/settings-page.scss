@@ -53,11 +53,17 @@
 .settings-page__config-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0;
+}
 
-  .settings-page__field {
-    flex: 1 1 220px;
-  }
+.settings-page__config-label {
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+}
+
+.settings-page__field--compact {
+  flex: 0 1 240px;
 }
 
 .settings-page__error {

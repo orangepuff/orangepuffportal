@@ -1,13 +1,12 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { of, switchMap, map } from 'rxjs';
+import { forkJoin, of, switchMap, map } from 'rxjs';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Avatar, IdentityService } from '@orangepuff/portal-frontend-shared';
@@ -16,7 +15,7 @@ import { ConfigSettingsService, ConfigValueInput, ConfigValueType, UserConfigIte
 
 @Component({
   selector: 'lib-portal-settings-page',
-  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatIconModule, MatInputModule, ReactiveFormsModule],
+  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, ReactiveFormsModule],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss'
 })
@@ -160,14 +159,21 @@ export class SettingsPage {
     });
   }
 
-  protected saveConfig(item: UserConfigItem): void {
+  protected saveSection(section: UserConfigSection): void {
     const userId = this.targetUserId();
-    const control = this.getControl(item.sConfigCode);
-    const value = this.toConfigValueInput(item.configType, control.value);
+    const requests = section.configs.map((item) => {
+      const control = this.getControl(item.sConfigCode);
+      const value = this.toConfigValueInput(item.configType, control.value);
+      return this.configSettingsService.setValue(userId, item.sConfigCode, value);
+    });
 
-    this.configSettingsService.setValue(userId, item.sConfigCode, value).subscribe({
-      next: () => this.snackBar.open(`${item.sConfigName} updated`, 'Dismiss'),
-      error: () => this.snackBar.open(`Could not update ${item.sConfigName}`, 'Dismiss')
+    if (requests.length === 0) {
+      return;
+    }
+
+    forkJoin(requests).subscribe({
+      next: () => this.snackBar.open(`${section.sSectionDesc} saved`, 'Dismiss'),
+      error: () => this.snackBar.open(`Could not save ${section.sSectionDesc}`, 'Dismiss')
     });
   }
 
