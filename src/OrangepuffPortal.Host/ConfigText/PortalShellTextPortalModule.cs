@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using OrangepuffPortal.ConfigText.Contract.Interfaces;
 using OrangepuffPortal.Shared.Modules;
 
@@ -10,7 +11,14 @@ namespace OrangepuffPortal.Host.ConfigText;
 /// automatically through <c>MigratePortalModulesAsync()</c>, so no consuming app needs its own call
 /// site for this (unlike a consuming app's own module text, which is each app's own responsibility).
 /// </summary>
-internal sealed class PortalShellTextPortalModule(IConfigTextWriter writer) : IPortalModule
+/// <remarks>
+/// <see cref="IPortalModule"/> instances are registered as singletons, but <see cref="IConfigTextWriter"/>
+/// is scoped — so it's resolved from the scoped <paramref name="serviceProvider"/> passed into
+/// <see cref="SeedAsync"/> (same pattern every other <see cref="IPortalModule"/> uses for its scoped
+/// DbContext), never injected via this class's own constructor, which would be a captive-dependency
+/// DI validation error at startup.
+/// </remarks>
+internal sealed class PortalShellTextPortalModule : IPortalModule
 {
     private const string CultureCode = "en-US";
 
@@ -20,5 +28,5 @@ internal sealed class PortalShellTextPortalModule(IConfigTextWriter writer) : IP
         Task.CompletedTask;
 
     public Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) =>
-        writer.UpsertManyAsync(CultureCode, PortalShellTextSeed.Load(CultureCode), cancellationToken);
+        serviceProvider.GetRequiredService<IConfigTextWriter>().UpsertManyAsync(CultureCode, PortalShellTextSeed.Load(CultureCode), cancellationToken);
 }
