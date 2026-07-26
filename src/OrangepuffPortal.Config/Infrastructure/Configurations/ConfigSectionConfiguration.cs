@@ -22,6 +22,7 @@ public class ConfigSectionConfiguration : IEntityTypeConfiguration<ConfigSection
         builder.Property(x => x.SectionDesc).HasColumnName("sSectionDesc").HasColumnType("nvarchar(255)").IsRequired();
         builder.Property(x => x.TextCode).HasColumnName("sTextCode").HasColumnType("varchar(100)").IsRequired();
         builder.Property(x => x.Show).HasColumnName("btShow").HasDefaultValue(true);
+        builder.Property(x => x.SortOrder).HasColumnName("iSortOrder");
 
         builder.Property(x => x.InsertedUserId).HasColumnName("iInsertedUserId");
         builder.Property(x => x.InsertedTime).HasColumnName("dtInsertedTime").HasColumnType("datetime");

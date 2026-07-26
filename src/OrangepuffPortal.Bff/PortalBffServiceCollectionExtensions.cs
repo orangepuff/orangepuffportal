@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using OrangepuffPortal.Bff.Infrastructure;
+using OrangepuffPortal.Bff.Infrastructure.ConfigGateway;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 using OrangepuffPortal.Shared.Auditing;
 using System.Security.Claims;
@@ -23,6 +24,7 @@ namespace OrangepuffPortal.Bff
                 .PersistKeysToFileSystem(new DirectoryInfo("/keys"));
 
             services.AddScoped<IIdentityGateway, IdentityGateway>();
+            services.AddScoped<IConfigGateway, ConfigGateway>();
 
             services.AddAuthentication(options =>
                 {

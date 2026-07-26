@@ -24,6 +24,9 @@ config.ConfigSections
                                                   -- localized section label (no FK — the two tables are
                                                   -- seeded independently, by convention only)
   btShow           BIT                NOT NULL DEFAULT 1
+  iSortOrder       INT                NULL       -- display order among sections; null sorts after any
+                                                  -- ordered sections, by iId (same convention as
+                                                  -- identity.SecurityRuleItems.iSortOrder)
   iInsertedUserId  INT                NULL
   dtInsertedTime   DATETIME           NULL
   iUpdatedUserId   INT                NULL
@@ -43,6 +46,8 @@ config.Configs
   btAllowUserEdit  BIT                NOT NULL DEFAULT 0  -- gates self-service edit; enforced by callers
                                                   -- (e.g. only a self-service Bff endpoint checks this),
                                                   -- not by IConfigUserValueService itself
+  iSortOrder       INT                NULL       -- display order within its section; null sorts after
+                                                  -- any ordered configs, by iId
   iInsertedUserId  INT                NULL
   dtInsertedTime   DATETIME           NULL
   iUpdatedUserId   INT                NULL
@@ -107,6 +112,7 @@ public sealed record ConfigSeedEntry(
     int IConfigType,
     bool BtShow = true,
     bool BtAllowUserEdit = false,
+    int? ISortOrder = null,
     bool BtReplace = false);
 
 public sealed record ConfigSectionSeedEntry(
@@ -114,6 +120,7 @@ public sealed record ConfigSectionSeedEntry(
     string STextCode,
     IReadOnlyCollection<ConfigSeedEntry> Configs,
     bool BtShow = true,
+    int? ISortOrder = null,
     bool BtReplace = false);
 
 public interface IConfigCatalogWriter
@@ -137,9 +144,16 @@ public interface IConfigUserValueService
 {
     Task<ConfigUserValueDto?> GetValueAsync(int userId, string configCode, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ConfigUserValueDto>> GetValuesAsync(int userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<UserConfigSectionDto>> GetSectionsForUserAsync(int userId, CancellationToken cancellationToken = default);
     Task SetValueAsync(int userId, string configCode, ConfigValueInput value, CancellationToken cancellationToken = default);
 }
 ```
+
+`GetSectionsForUserAsync` is the read path a settings UI actually needs: every visible section
+(`btShow = 1`) and its visible configs, each annotated with that user's current value (all four value
+fields null if they've never set one), ordered by `iSortOrder` (nulls last) then `iId` at both the section
+and config level. Unlike `GetValuesAsync` (which only returns configs the user already has a `ConfigUsers`
+row for), this always returns the full catalog so a settings page can render every setting, set or not.
 
 `SetValueAsync` flow, in one `SaveChanges`:
 1. Resolve `Configs` by `sConfigCode` (throws if unknown — the catalog is the source of truth for what
@@ -165,11 +179,27 @@ convention only. A settings UI resolves a section/config's label the same way it
 look it up via `IConfigTextReader`/`GET /bff/config-text`, falling back to `sSectionDesc`/`sConfigName` if
 the text code hasn't been seeded into `ConfigTextDefinition` yet.
 
+## Bff endpoints
+
+`OrangepuffPortal.Bff` exposes this module through `IConfigGateway`/`ConfigGateway`
+(`Infrastructure/ConfigGateway/`) — a thin in-process wrapper over `IConfigUserValueService`, same shape as
+`IIdentityGateway` but calling the module's plain service directly (Config has no MediatR handlers):
+
+- `GET /bff/users/{userId}/config` — self-or-admin only (manual check inside the endpoint: the caller must
+  be the target user or hold the `AdminOnly` claim). Returns `GetSectionsForUserAsync(userId)`. Any signed
+  in user can read their own config; an admin can read anyone's.
+- `PUT /bff/admin/users/{userId}/config/{configCode}` — mapped under the existing `/bff/admin` group
+  (`AdminOnly` policy already required there). Body is a `ConfigValueInput`. Calls `SetValueAsync`
+  directly — admin writes are not gated by `btAllowUserEdit` (see above, that flag is a signal for a future
+  self-service write endpoint, not built yet since the current settings UI is admin-write / user-read-only
+  by design).
+
 ## What's out of scope for now
 
-- No Bff read/write endpoints yet (no `GET /bff/config`, no self-service "my settings" endpoint) — this
-  doc covers the module and its in-process contract only; add endpoints in `OrangepuffPortal.Bff` when a
-  consuming app actually needs a settings UI.
+- No self-service (non-admin) config write endpoint — `btAllowUserEdit` is populated by seed data but not
+  yet consulted by any caller; the current Settings UI only lets an admin edit values, any user (including
+  the owner) only ever reads their own. Add a `PUT /bff/me/config/{configCode}` gated on
+  `btAllowUserEdit` if/when self-service editing is actually needed.
 - No default-value column on `Configs` (see above).
 - No `CHECK` constraint enforcing "only the column matching `iConfigType` is non-null" on `ConfigUsers`/
   `ConfigUsersHistory` — enforced by `ConfigUserValueService` only, at the application layer.

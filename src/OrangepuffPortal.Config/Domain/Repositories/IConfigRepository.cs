@@ -18,6 +18,9 @@ public interface IConfigRepository
 
     Task<IReadOnlyList<(ConfigUser Value, ConfigItem Config)>> ListUserValuesWithConfigAsync(int userId, CancellationToken cancellationToken = default);
 
+    /// <summary>Every visible section/config, left-joined to <paramref name="userId"/>'s value if any, ordered by SortOrder (nulls last) then Id at both levels.</summary>
+    Task<IReadOnlyList<(ConfigSection Section, ConfigItem Item, ConfigUser? Value)>> ListVisibleCatalogWithUserValuesAsync(int userId, CancellationToken cancellationToken = default);
+
     Task AddUserValueAsync(ConfigUser configUser, CancellationToken cancellationToken = default);
 
     Task AddUserValueHistoryAsync(ConfigUserHistory history, CancellationToken cancellationToken = default);

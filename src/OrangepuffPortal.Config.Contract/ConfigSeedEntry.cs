@@ -11,6 +11,7 @@ namespace OrangepuffPortal.Config.Contract;
 /// <param name="IConfigType">See <see cref="ConfigValueType"/>.</param>
 /// <param name="BtShow">Whether this config is shown in a settings UI.</param>
 /// <param name="BtAllowUserEdit">Whether a user may self-service edit this config's value.</param>
+/// <param name="ISortOrder">Display order within its section; null sorts after any ordered configs, by Id.</param>
 /// <param name="BtReplace">
 /// Seed-file-only override: when true, an existing row (matched by SConfigCode) is updated instead
 /// of skipped, including which section it belongs to. Never persisted as a DB column.
@@ -22,4 +23,5 @@ public sealed record ConfigSeedEntry(
     int IConfigType,
     bool BtShow = true,
     bool BtAllowUserEdit = false,
+    int? ISortOrder = null,
     bool BtReplace = false);

@@ -25,6 +25,7 @@ public class ConfigItemConfiguration : IEntityTypeConfiguration<ConfigItem>
         builder.Property(x => x.ConfigType).HasColumnName("iConfigType").HasDefaultValue(0);
         builder.Property(x => x.Show).HasColumnName("btShow").HasDefaultValue(true);
         builder.Property(x => x.AllowUserEdit).HasColumnName("btAllowUserEdit").HasDefaultValue(false);
+        builder.Property(x => x.SortOrder).HasColumnName("iSortOrder");
 
         builder.Property(x => x.InsertedUserId).HasColumnName("iInsertedUserId");
         builder.Property(x => x.InsertedTime).HasColumnName("dtInsertedTime").HasColumnType("datetime");

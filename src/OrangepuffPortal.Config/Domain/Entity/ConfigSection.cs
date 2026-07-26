@@ -16,6 +16,7 @@ public class ConfigSection
     public string SectionDesc { get; private set; } = string.Empty;
     public string TextCode { get; private set; } = string.Empty;
     public bool Show { get; private set; } = true;
+    public int? SortOrder { get; private set; }
     public int? InsertedUserId { get; private set; }
     public DateTime? InsertedTime { get; private set; }
     public int? UpdatedUserId { get; private set; }
@@ -23,7 +24,7 @@ public class ConfigSection
 
     private ConfigSection() { } // EF
 
-    public ConfigSection(string module, string sectionDesc, string textCode, bool show, DateTime utcNow)
+    public ConfigSection(string module, string sectionDesc, string textCode, bool show, DateTime utcNow, int? sortOrder = null)
     {
         if (string.IsNullOrWhiteSpace(module))
         {
@@ -44,14 +45,16 @@ public class ConfigSection
         SectionDesc = sectionDesc.Trim();
         TextCode = textCode.Trim();
         Show = show;
+        SortOrder = sortOrder;
         InsertedTime = utcNow;
     }
 
     /// <summary>Overwrite an already-seeded section (only reached when the seed entry sets btReplace).</summary>
-    public void Replace(string sectionDesc, bool show, DateTime utcNow)
+    public void Replace(string sectionDesc, bool show, DateTime utcNow, int? sortOrder = null)
     {
         SectionDesc = sectionDesc.Trim();
         Show = show;
+        SortOrder = sortOrder;
         UpdatedTime = utcNow;
     }
 }

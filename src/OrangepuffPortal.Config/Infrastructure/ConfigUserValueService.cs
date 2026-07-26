@@ -25,6 +25,32 @@ internal class ConfigUserValueService(IConfigRepository repository, ICurrentUser
         return rows.Select(row => ToDto(row.Config, row.Value)).ToList();
     }
 
+    public async Task<IReadOnlyList<UserConfigSectionDto>> GetSectionsForUserAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        var rows = await repository.ListVisibleCatalogWithUserValuesAsync(userId, cancellationToken);
+
+        return rows
+            .GroupBy(row => row.Section.Id)
+            .Select(group =>
+            {
+                var section = group.First().Section;
+                var items = group.Select(row => new UserConfigItemDto(
+                    row.Item.ConfigCode,
+                    row.Item.ConfigName,
+                    row.Item.TextCode,
+                    (ConfigValueType)row.Item.ConfigType,
+                    row.Item.AllowUserEdit,
+                    row.Item.SortOrder,
+                    row.Value?.StringValue,
+                    row.Value?.IntValue,
+                    row.Value?.DecimalValue,
+                    row.Value?.BoolValue)).ToList();
+
+                return new UserConfigSectionDto(section.Module, section.SectionDesc, section.TextCode, section.SortOrder, items);
+            })
+            .ToList();
+    }
+
     public async Task SetValueAsync(int userId, string configCode, ConfigValueInput value, CancellationToken cancellationToken = default)
     {
         var config = await GetConfigOrThrowAsync(configCode, cancellationToken);

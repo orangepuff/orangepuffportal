@@ -27,7 +27,7 @@ internal class ConfigCatalogWriter(IConfigRepository repository, ILogger<ConfigC
 
             if (section is null)
             {
-                section = new ConfigSection(module, sectionEntry.SSectionDesc, sectionEntry.STextCode, sectionEntry.BtShow, utcNow);
+                section = new ConfigSection(module, sectionEntry.SSectionDesc, sectionEntry.STextCode, sectionEntry.BtShow, utcNow, sectionEntry.ISortOrder);
                 await repository.AddSectionAsync(section, cancellationToken);
                 // Configs below need section.Id for their FK, so this one flushes early.
                 await repository.SaveChangesAsync(cancellationToken);
@@ -35,7 +35,7 @@ internal class ConfigCatalogWriter(IConfigRepository repository, ILogger<ConfigC
             }
             else if (sectionEntry.BtReplace)
             {
-                section.Replace(sectionEntry.SSectionDesc, sectionEntry.BtShow, utcNow);
+                section.Replace(sectionEntry.SSectionDesc, sectionEntry.BtShow, utcNow, sectionEntry.ISortOrder);
                 sectionsWritten++;
             }
 
@@ -45,13 +45,13 @@ internal class ConfigCatalogWriter(IConfigRepository repository, ILogger<ConfigC
 
                 if (config is null)
                 {
-                    config = new ConfigItem(section.Id, configEntry.SConfigCode, configEntry.SConfigName, configEntry.STextCode, configEntry.IConfigType, configEntry.BtShow, configEntry.BtAllowUserEdit, utcNow);
+                    config = new ConfigItem(section.Id, configEntry.SConfigCode, configEntry.SConfigName, configEntry.STextCode, configEntry.IConfigType, configEntry.BtShow, configEntry.BtAllowUserEdit, utcNow, configEntry.ISortOrder);
                     await repository.AddConfigAsync(config, cancellationToken);
                     configsWritten++;
                 }
                 else if (configEntry.BtReplace)
                 {
-                    config.Replace(section.Id, configEntry.SConfigName, configEntry.STextCode, configEntry.IConfigType, configEntry.BtShow, configEntry.BtAllowUserEdit, utcNow);
+                    config.Replace(section.Id, configEntry.SConfigName, configEntry.STextCode, configEntry.IConfigType, configEntry.BtShow, configEntry.BtAllowUserEdit, utcNow, configEntry.ISortOrder);
                     configsWritten++;
                 }
             }

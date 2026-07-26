@@ -27,6 +27,17 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
             .Join(db.Configs, cu => cu.ConfigId, c => c.Id, (cu, c) => new ValueTuple<ConfigUser, ConfigItem>(cu, c))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<(ConfigSection Section, ConfigItem Item, ConfigUser? Value)>> ListVisibleCatalogWithUserValuesAsync(int userId, CancellationToken cancellationToken = default) =>
+        await db.ConfigSections.AsNoTracking()
+            .Where(section => section.Show)
+            .Join(db.Configs.AsNoTracking().Where(item => item.Show), section => section.Id, item => item.SectionId, (section, item) => new { section, item })
+            .GroupJoin(db.ConfigUsers.AsNoTracking().Where(value => value.UserId == userId), row => row.item.Id, value => value.ConfigId, (row, values) => new { row.section, row.item, values })
+            .SelectMany(row => row.values.DefaultIfEmpty(), (row, value) => new { row.section, row.item, value })
+            .OrderBy(row => row.section.SortOrder ?? int.MaxValue).ThenBy(row => row.section.Id)
+            .ThenBy(row => row.item.SortOrder ?? int.MaxValue).ThenBy(row => row.item.Id)
+            .Select(row => new ValueTuple<ConfigSection, ConfigItem, ConfigUser?>(row.section, row.item, row.value))
+            .ToListAsync(cancellationToken);
+
     public async Task AddUserValueAsync(ConfigUser configUser, CancellationToken cancellationToken = default) =>
         await db.ConfigUsers.AddAsync(configUser, cancellationToken);
 

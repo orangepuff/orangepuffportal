@@ -19,6 +19,7 @@ public class ConfigItem
     public int ConfigType { get; private set; }
     public bool Show { get; private set; } = true;
     public bool AllowUserEdit { get; private set; }
+    public int? SortOrder { get; private set; }
     public int? InsertedUserId { get; private set; }
     public DateTime? InsertedTime { get; private set; }
     public int? UpdatedUserId { get; private set; }
@@ -26,7 +27,7 @@ public class ConfigItem
 
     private ConfigItem() { } // EF
 
-    public ConfigItem(int sectionId, string configCode, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow)
+    public ConfigItem(int sectionId, string configCode, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow, int? sortOrder = null)
     {
         if (string.IsNullOrWhiteSpace(configCode))
         {
@@ -50,11 +51,12 @@ public class ConfigItem
         ConfigType = configType;
         Show = show;
         AllowUserEdit = allowUserEdit;
+        SortOrder = sortOrder;
         InsertedTime = utcNow;
     }
 
     /// <summary>Overwrite an already-seeded config (only reached when the seed entry sets btReplace) — including moving it to a different section.</summary>
-    public void Replace(int sectionId, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow)
+    public void Replace(int sectionId, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow, int? sortOrder = null)
     {
         SectionId = sectionId;
         ConfigName = configName.Trim();
@@ -62,6 +64,7 @@ public class ConfigItem
         ConfigType = configType;
         Show = show;
         AllowUserEdit = allowUserEdit;
+        SortOrder = sortOrder;
         UpdatedTime = utcNow;
     }
 }

@@ -9,6 +9,7 @@ namespace OrangepuffPortal.Config.Contract;
 /// <param name="STextCode">Pointer into ConfigTextDefinition.sTextCode for the localized label.</param>
 /// <param name="Configs">Configs belonging to this section.</param>
 /// <param name="BtShow">Whether this section is shown in a settings UI.</param>
+/// <param name="ISortOrder">Display order among sections; null sorts after any ordered sections, by Id.</param>
 /// <param name="BtReplace">
 /// Seed-file-only override: when true, an existing row (matched by module + STextCode) has its
 /// SSectionDesc/BtShow updated instead of skipped. Never persisted as a DB column.
@@ -18,4 +19,5 @@ public sealed record ConfigSectionSeedEntry(
     string STextCode,
     IReadOnlyCollection<ConfigSeedEntry> Configs,
     bool BtShow = true,
+    int? ISortOrder = null,
     bool BtReplace = false);
