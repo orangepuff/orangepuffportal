@@ -26,7 +26,13 @@ namespace OrangepuffPortal.Bff.Endpoints.AvatarEndpoints
 
                 var result = await client.UpdateAvatarAsync(userId, image, contentType, ct);
                 return Results.Ok(result);
-            }).RequireAuthorization();
+            })
+                .RequireAuthorization()
+                // Minimal APIs auto-require antiforgery validation for any endpoint binding IFormFile,
+                // but this app never wires up app.UseAntiforgery() — every other state-changing route
+                // here already relies on the cookie's SameSite=Lax alone for CSRF mitigation, so without
+                // this the upload 500s with "contains anti-forgery metadata, but a middleware was not found".
+                .DisableAntiforgery();
 
             app.MapGet("/bff/users/{id:int}/avatar", async (int id, IIdentityGateway client, CancellationToken ct) =>
             {
