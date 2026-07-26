@@ -10,6 +10,8 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
         Task<GoogleProvisionResult> ProvisionGoogleUserAsync(string providerKey, string email, bool emailVerified, string? displayName, CancellationToken ct = default);
         Task<PasswordSignInResult> VerifyPasswordAsync(string usernameOrEmail, string password, CancellationToken ct = default);
         Task<SetUserPasswordResult> SetUserPasswordAsync(int userId, string newPassword, CancellationToken ct = default);
+        Task<UpdateDisplayNameResult> UpdateDisplayNameAsync(int userId, string displayName, CancellationToken ct = default);
+        Task<ChangeOwnPasswordResult> ChangeOwnPasswordAsync(int userId, string currentPassword, string newPassword, CancellationToken ct = default);
         Task<bool> IsUserActiveAsync(int userId, CancellationToken ct = default);
         Task<bool> IsUserAdminAsync(int userId, CancellationToken ct = default);
 

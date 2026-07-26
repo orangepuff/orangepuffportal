@@ -2,11 +2,13 @@ using MediatR;
 using OrangepuffPortal.Identity.Application.Commands.AddSecurityRuleCategory;
 using OrangepuffPortal.Identity.Application.Commands.AddSecurityRuleItem;
 using OrangepuffPortal.Identity.Application.Commands.AddUser;
+using OrangepuffPortal.Identity.Application.Commands.ChangeOwnPassword;
 using OrangepuffPortal.Identity.Application.Commands.DeleteSecurityRuleCategory;
 using OrangepuffPortal.Identity.Application.Commands.DeleteSecurityRuleItem;
 using OrangepuffPortal.Identity.Application.Commands.DeleteUser;
 using OrangepuffPortal.Identity.Application.Commands.ProvisionGoogleUser;
 using OrangepuffPortal.Identity.Application.Commands.SetUserPassword;
+using OrangepuffPortal.Identity.Application.Commands.UpdateDisplayName;
 using OrangepuffPortal.Identity.Application.Commands.UpdateSecurityRuleCategory;
 using OrangepuffPortal.Identity.Application.Commands.UpdateSecurityRuleItem;
 using OrangepuffPortal.Identity.Application.Commands.UpdateUser;
@@ -47,6 +49,18 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
         {
             var result = await mediator.Send(new SetUserPasswordCommand(userId, newPassword), ct);
             return new SetUserPasswordResult(result.Success, result.RejectionReason);
+        }
+
+        public async Task<UpdateDisplayNameResult> UpdateDisplayNameAsync(int userId, string displayName, CancellationToken ct = default)
+        {
+            var result = await mediator.Send(new UpdateDisplayNameCommand(userId, displayName), ct);
+            return new UpdateDisplayNameResult(result.Success, result.RejectionReason);
+        }
+
+        public async Task<ChangeOwnPasswordResult> ChangeOwnPasswordAsync(int userId, string currentPassword, string newPassword, CancellationToken ct = default)
+        {
+            var result = await mediator.Send(new ChangeOwnPasswordCommand(userId, currentPassword, newPassword), ct);
+            return new ChangeOwnPasswordResult(result.Success, result.RejectionReason);
         }
 
         public Task<bool> IsUserActiveAsync(int userId, CancellationToken ct = default) =>
