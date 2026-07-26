@@ -11,6 +11,11 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    // While a missing avatar's request is in flight (or briefly between load and the error
+    // handler swapping in the initials span), some browsers render the alt text overflowing
+    // the image's box instead of clipping it to size — silence that text entirely.
+    font-size: 0;
+    color: transparent;
   }
 }
 

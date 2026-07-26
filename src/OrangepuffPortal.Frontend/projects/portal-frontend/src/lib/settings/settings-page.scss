@@ -1,6 +1,7 @@
 .settings-page {
   padding: 16px;
   max-width: 640px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -37,14 +38,26 @@
   max-width: 320px;
 }
 
-.settings-page__field {
+// flex-basis is a main-axis size — 220px means width in a row but height in a column, so the
+// growth behavior below must stay scoped to row containers or every column field stretches
+// vertically to fill the container instead of just being full-width.
+.settings-page__form-row .settings-page__field {
   flex: 1 1 220px;
+}
+
+.settings-page__form-column .settings-page__field {
+  flex: none;
+  width: 100%;
 }
 
 .settings-page__config-row {
   display: flex;
   align-items: center;
   gap: 8px;
+
+  .settings-page__field {
+    flex: 1 1 220px;
+  }
 }
 
 .settings-page__error {
