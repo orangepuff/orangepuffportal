@@ -6,11 +6,15 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../auth/auth.service';
 import { PORTAL_SHELL_CONFIG } from '../config/portal-shell-config';
-import { DEFAULT_TAGLINE, LandingContent } from './landing-content';
+import { TranslatePipe } from '../translation/translate.pipe';
+import { TranslationService } from '../translation/translation.service';
+import { LandingContent } from './landing-content';
+
+const MODULE = 'OrangepuffPortal.Frontend';
 
 @Component({
   selector: 'lib-portal-landing',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, TranslatePipe],
   templateUrl: './landing.html',
   styleUrl: './landing.scss'
 })
@@ -18,10 +22,13 @@ export class Landing implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly config = inject(PORTAL_SHELL_CONFIG);
+  private readonly translationService = inject(TranslationService);
+
+  protected readonly module = MODULE;
 
   protected readonly content: LandingContent = {
     title: this.config.appName,
-    tagline: this.config.landing?.tagline ?? DEFAULT_TAGLINE,
+    tagline: this.config.landing?.tagline ?? this.translationService.get('landing.defaultTagline', MODULE),
     heroImageUrl: this.config.landing?.heroImageUrl
   };
 
@@ -65,7 +72,7 @@ export class Landing implements OnInit {
       next: () => this.router.navigateByUrl('/home'),
       error: () => {
         this.submitting.set(false);
-        this.errorMessage.set('Invalid username/email or password.');
+        this.errorMessage.set(this.translationService.get('landing.invalidCredentials', MODULE));
       }
     });
   }

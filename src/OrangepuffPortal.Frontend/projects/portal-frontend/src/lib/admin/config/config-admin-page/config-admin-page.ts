@@ -13,10 +13,14 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ConfirmDialog, ConfirmDialogData } from '@orangepuff/portal-frontend-shared';
+import { TranslatePipe } from '../../../translation/translate.pipe';
+import { TranslationService } from '../../../translation/translation.service';
 import { ConfigAdminService } from '../config-admin.service';
 import { CONFIG_VALUE_TYPES, ConfigItemFilter, ConfigItemRow, ConfigSection } from '../config-item';
 import { ConfigSectionFormDialog, ConfigSectionFormDialogData, ConfigSectionFormDialogResult } from '../config-section-form-dialog/config-section-form-dialog';
 import { ConfigItemFormDialog, ConfigItemFormDialogData, ConfigItemFormDialogResult } from '../config-item-form-dialog/config-item-form-dialog';
+
+const MODULE = 'OrangepuffPortal.Frontend';
 
 @Component({
   selector: 'lib-portal-config-admin-page',
@@ -32,7 +36,8 @@ import { ConfigItemFormDialog, ConfigItemFormDialogData, ConfigItemFormDialogRes
     MatPaginatorModule,
     MatProgressBarModule,
     MatSortModule,
-    MatTabsModule
+    MatTabsModule,
+    TranslatePipe
   ],
   templateUrl: './config-admin-page.html',
   styleUrl: './config-admin-page.scss'
@@ -41,8 +46,11 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
   private readonly configAdminService = inject(ConfigAdminService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly translationService = inject(TranslationService);
 
   @ViewChild('sectionSort') private sectionSort!: MatSort;
+
+  protected readonly module = MODULE;
 
   protected readonly sections = signal<ConfigSection[]>([]);
   // Sections are unpaged (small, hand-curated list) — sorted entirely client-side via
@@ -93,7 +101,8 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
   }
 
   protected configTypeName(item: ConfigItemRow): string {
-    return this.configValueTypes.find((t) => t.value === item.iConfigType)?.name ?? `#${item.iConfigType}`;
+    const type = this.configValueTypes.find((t) => t.value === item.iConfigType);
+    return type ? this.translationService.get(type.textCode, MODULE) : `#${item.iConfigType}`;
   }
 
   protected defaultValueDisplay(item: ConfigItemRow): string {
@@ -105,7 +114,9 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
       case 2:
         return item.nDefaultValue !== null ? String(item.nDefaultValue) : '—';
       case 3:
-        return item.btDefaultValue !== null ? (item.btDefaultValue ? 'Yes' : 'No') : '—';
+        return item.btDefaultValue !== null
+          ? this.translationService.get(item.btDefaultValue ? 'yes' : 'no', 'OrangepuffPortal.Common')
+          : '—';
       default:
         return '—';
     }
@@ -184,9 +195,13 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
 
         this.configAdminService.addSection(result).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.translationService.get('dismiss', 'OrangepuffPortal.Common'));
             this.reloadSections();
           } else {
-            this.snackBar.open(`Could not add section: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(
+              `${this.translationService.get('admin.config.section.msg.addFailed', MODULE)}: ${res.rejectionReason}`,
+              this.translationService.get('dismiss', 'OrangepuffPortal.Common')
+            );
           }
         });
       });
@@ -205,16 +220,24 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
 
         this.configAdminService.updateSection(section.id, result).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.translationService.get('dismiss', 'OrangepuffPortal.Common'));
             this.reloadSections();
           } else {
-            this.snackBar.open(`Could not update section: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(
+              `${this.translationService.get('admin.config.section.msg.updateFailed', MODULE)}: ${res.rejectionReason}`,
+              this.translationService.get('dismiss', 'OrangepuffPortal.Common')
+            );
           }
         });
       });
   }
 
   protected deleteSection(section: ConfigSection): void {
-    const data: ConfirmDialogData = { title: 'Delete section', message: `Delete section "${section.sSectionDesc}"?`, confirmLabel: 'Delete' };
+    const data: ConfirmDialogData = {
+      title: this.translationService.get('admin.config.section.confirmDelete.title', MODULE),
+      message: this.translationService.getFormatted('admin.config.section.confirmDelete.message', MODULE, section.sSectionDesc),
+      confirmLabel: this.translationService.get('delete', 'OrangepuffPortal.Common')
+    };
 
     this.dialog
       .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })
@@ -226,9 +249,13 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
 
         this.configAdminService.deleteSection(section.id).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.translationService.get('dismiss', 'OrangepuffPortal.Common'));
             this.reloadSections();
           } else {
-            this.snackBar.open(`Could not delete section: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(
+              `${this.translationService.get('admin.config.section.msg.deleteFailed', MODULE)}: ${res.rejectionReason}`,
+              this.translationService.get('dismiss', 'OrangepuffPortal.Common')
+            );
           }
         });
       });
@@ -247,9 +274,13 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
 
         this.configAdminService.addConfig(result).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.translationService.get('dismiss', 'OrangepuffPortal.Common'));
             this.reloadItems();
           } else {
-            this.snackBar.open(`Could not add config: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(
+              `${this.translationService.get('admin.config.item.msg.addFailed', MODULE)}: ${res.rejectionReason}`,
+              this.translationService.get('dismiss', 'OrangepuffPortal.Common')
+            );
           }
         });
       });
@@ -268,16 +299,24 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
 
         this.configAdminService.updateConfig(item.id, result).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.translationService.get('dismiss', 'OrangepuffPortal.Common'));
             this.reloadItems();
           } else {
-            this.snackBar.open(`Could not update config: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(
+              `${this.translationService.get('admin.config.item.msg.updateFailed', MODULE)}: ${res.rejectionReason}`,
+              this.translationService.get('dismiss', 'OrangepuffPortal.Common')
+            );
           }
         });
       });
   }
 
   protected deleteConfig(item: ConfigItemRow): void {
-    const data: ConfirmDialogData = { title: 'Delete config', message: `Delete config "${item.sConfigCode}"?`, confirmLabel: 'Delete' };
+    const data: ConfirmDialogData = {
+      title: this.translationService.get('admin.config.item.confirmDelete.title', MODULE),
+      message: this.translationService.getFormatted('admin.config.item.confirmDelete.message', MODULE, item.sConfigCode),
+      confirmLabel: this.translationService.get('delete', 'OrangepuffPortal.Common')
+    };
 
     this.dialog
       .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })
@@ -289,9 +328,13 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
 
         this.configAdminService.deleteConfig(item.id).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.translationService.get('dismiss', 'OrangepuffPortal.Common'));
             this.reloadItems();
           } else {
-            this.snackBar.open(`Could not delete config: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(
+              `${this.translationService.get('admin.config.item.msg.deleteFailed', MODULE)}: ${res.rejectionReason}`,
+              this.translationService.get('dismiss', 'OrangepuffPortal.Common')
+            );
           }
         });
       });

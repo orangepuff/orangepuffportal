@@ -6,5 +6,3 @@ export interface LandingContent {
   // consumer without needing an asset.
   heroImageUrl?: string;
 }
-
-export const DEFAULT_TAGLINE = 'A ready-made starting point for your next project.';

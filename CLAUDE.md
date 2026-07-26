@@ -34,3 +34,47 @@ To force a rebuild to actually take effect in a tarball consumer while iterating
 
 Do this every time you change frontend library code and need to see the effect in a sample/consumer app, not just
 once per session — each new rebuild needs its own fresh version bump to bust the cache again.
+
+## No hardcoded user-facing text
+
+Every string a user sees — labels, buttons, column headers, hints, dialog titles, snackbar/toast
+messages (both success and failure) — comes from `ConfigTextDefinition`, not a literal in source.
+The only exception is log messages (`logger.LogInformation(...)`, `console.log(...)`, etc.) — those
+stay as plain hardcoded strings, they're for developers, not end users.
+
+**Backend**: inject `ITranslation` (`OrangepuffPortal.Shared.Translation`) — a single shared service,
+not scoped to one module — and call `await translation.TranslateAsync(code, module, ct)`. Resolves
+for the current user's culture (`ICurrentUser.CultureCode`), falls back to the `"*"` wildcard row,
+and finally to `code` itself if nothing matches at all, so a missing translation is visibly wrong
+(shows the raw code) instead of silently blank. Registered once by `AddConfigTextModule` (see
+`OrangepuffPortal.ConfigText/Infrastructure/Translation.cs`), so it's available to every module and
+any consuming app's own modules without extra wiring.
+
+Where to call it depends on the module's shape:
+- **A module with a separate Bff-facing DTO from its Application-layer result** (MediatR-based, e.g.
+  Identity): translate at the point the Bff gateway remaps the Application result onto its own DTO —
+  see `OrangepuffPortal.Bff/Infrastructure/IdentityGateway/IdentityGateway.cs`. The Application layer
+  itself keeps returning raw codes (e.g. `AddUserResult.Rejected("username_taken")`); only the
+  gateway resolves them to text. Success codes are hardcoded per gateway method (e.g. `AddUserAsync`
+  always uses `"user_created"`) since the Application layer has no success-code concept of its own.
+- **A module whose own Result type flows straight through to the Bff response** (no MediatR, e.g.
+  Config, ConfigText): translate inline in the admin/application service itself, right before
+  constructing the result — see `OrangepuffPortal.Config/Infrastructure/ConfigCatalogAdminService.cs`'s
+  `TranslateAsync` helper.
+
+Every mutation Result record carries **both** `RejectionReason` (translated, null on success) and
+`SuccessMessage` (translated, null on failure) — see any file under `Infrastructure/IdentityGateway/`
+or `*.Contract/*AdminResult.cs` for the shape.
+
+New seed entries go in `OrangepuffPortal.Host/ConfigText/en-US.json` (loaded automatically by
+`PortalShellTextPortalModule` for the portal's own shell/admin text, or a consuming app's own
+`ConfigText/{culture}.json` for its own module text — see `docs/config-text-design.md`). Reuse
+`OrangepuffPortal.Common` for truly universal words (Save/Cancel/Edit/Delete/etc.) instead of
+duplicating them per screen.
+
+**Frontend**: inject `TranslationService` (`portal-frontend/src/lib/translation/`) or use the
+`translate` pipe in templates — `{{ 'admin.config.title' | translate:'OrangepuffPortal.Frontend' }}`.
+Same fallback rule as the backend (falls back to the code itself). The whole culture's text set is
+preloaded once at app bootstrap via `provideAppInitializer()` inside `providePortalShell()` — no
+extra wiring needed in a consuming app. For interpolated messages (e.g. `Delete user "{0}"?`), seed
+the `{0}`-style placeholder text and resolve with `TranslationService.getFormatted(code, module, ...args)`.

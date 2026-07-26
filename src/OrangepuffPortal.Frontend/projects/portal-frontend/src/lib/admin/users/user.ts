@@ -27,4 +27,5 @@ export interface UpdateUserRequest {
 export interface UserMutationResult {
   success: boolean;
   rejectionReason: string | null;
+  successMessage: string | null;
 }

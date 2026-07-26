@@ -1,9 +1,9 @@
 export type RuleTypeName = 'Boolean' | 'Integer' | 'Decimal';
 
-export const RULE_TYPES: { value: number; name: RuleTypeName }[] = [
-  { value: 0, name: 'Boolean' },
-  { value: 1, name: 'Integer' },
-  { value: 2, name: 'Decimal' }
+export const RULE_TYPES: { value: number; name: RuleTypeName; textCode: string }[] = [
+  { value: 0, name: 'Boolean', textCode: 'admin.securityRuleItems.ruleType.boolean' },
+  { value: 1, name: 'Integer', textCode: 'admin.securityRuleItems.ruleType.integer' },
+  { value: 2, name: 'Decimal', textCode: 'admin.securityRuleItems.ruleType.decimal' }
 ];
 
 export interface SecurityRuleItem {
@@ -38,4 +38,5 @@ export interface UpdateSecurityRuleItemRequest {
 export interface SecurityRuleItemMutationResult {
   success: boolean;
   rejectionReason: string | null;
+  successMessage: string | null;
 }

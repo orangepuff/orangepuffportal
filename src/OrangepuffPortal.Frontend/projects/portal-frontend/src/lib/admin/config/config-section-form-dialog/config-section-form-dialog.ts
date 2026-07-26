@@ -5,6 +5,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { TranslatePipe } from '../../../translation/translate.pipe';
 import { ConfigSection } from '../config-item';
 
 export interface ConfigSectionFormDialogData {
@@ -21,7 +22,7 @@ export interface ConfigSectionFormDialogResult {
 
 @Component({
   selector: 'lib-portal-config-section-form-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, TranslatePipe],
   templateUrl: './config-section-form-dialog.html',
   styleUrl: './config-section-form-dialog.scss'
 })
@@ -29,6 +30,7 @@ export class ConfigSectionFormDialog {
   private readonly dialogRef = inject(MatDialogRef<ConfigSectionFormDialog, ConfigSectionFormDialogResult>);
   protected readonly data = inject<ConfigSectionFormDialogData>(MAT_DIALOG_DATA);
 
+  protected readonly module = 'OrangepuffPortal.Frontend';
   protected readonly isEdit = this.data.section !== null;
 
   protected readonly form = new FormGroup({

@@ -6,14 +6,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { ConfirmDialog, ConfirmDialogData } from '@orangepuff/portal-frontend-shared';
+import { TranslatePipe } from '../../../translation/translate.pipe';
+import { TranslationService } from '../../../translation/translation.service';
 import { UserAdminService } from '../user-admin.service';
 import { User } from '../user';
 import { UserFormDialog, UserFormDialogData, UserFormDialogResult } from '../user-form-dialog/user-form-dialog';
 import { SetPasswordDialog, SetPasswordDialogData } from '../set-password-dialog/set-password-dialog';
 
+const MODULE = 'OrangepuffPortal.Frontend';
+
 @Component({
   selector: 'lib-portal-user-list',
-  imports: [MatTableModule, MatButtonModule, MatIconModule, MatDialogModule, RouterModule],
+  imports: [MatTableModule, MatButtonModule, MatIconModule, MatDialogModule, RouterModule, TranslatePipe],
   templateUrl: './user-list.html',
   styleUrl: './user-list.scss'
 })
@@ -21,7 +25,9 @@ export class UserList implements OnInit {
   private readonly userAdminService = inject(UserAdminService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly translationService = inject(TranslationService);
 
+  protected readonly module = MODULE;
   protected readonly users = signal<User[]>([]);
   protected readonly displayedColumns = ['username', 'email', 'displayName', 'isActive', 'template', 'actions'];
 
@@ -33,9 +39,13 @@ export class UserList implements OnInit {
     this.userAdminService.list().subscribe((users) => this.users.set(users));
   }
 
+  private dismissLabel(): string {
+    return this.translationService.get('dismiss', 'OrangepuffPortal.Common');
+  }
+
   protected templateName(user: User): string {
     if (user.isTemplateUser) {
-      return '(is a template)';
+      return this.translationService.get('admin.users.templateSuffix', MODULE);
     }
     if (user.parentId === null) {
       return '—';
@@ -64,9 +74,10 @@ export class UserList implements OnInit {
           })
           .subscribe((res) => {
             if (res.success) {
+              this.snackBar.open(res.successMessage!, this.dismissLabel());
               this.reload();
             } else {
-              this.snackBar.open(`Could not add user: ${res.rejectionReason}`, 'Dismiss');
+              this.snackBar.open(`${this.translationService.get('admin.users.msg.addFailed', MODULE)}: ${res.rejectionReason}`, this.dismissLabel());
             }
           });
       });
@@ -85,16 +96,20 @@ export class UserList implements OnInit {
 
         this.userAdminService.setPassword(user.id, newPassword).subscribe((res) => {
           if (res.success) {
-            this.snackBar.open(`Password updated for ${user.username}`, 'Dismiss');
+            this.snackBar.open(this.translationService.getFormatted('admin.users.msg.setPasswordSucceeded', MODULE, user.username), this.dismissLabel());
           } else {
-            this.snackBar.open(`Could not set password: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(`${this.translationService.get('admin.users.msg.setPasswordFailed', MODULE)}: ${res.rejectionReason}`, this.dismissLabel());
           }
         });
       });
   }
 
   protected deleteUser(user: User): void {
-    const data: ConfirmDialogData = { title: 'Delete user', message: `Delete user "${user.username}"?`, confirmLabel: 'Delete' };
+    const data: ConfirmDialogData = {
+      title: this.translationService.get('admin.users.confirmDelete.title', MODULE),
+      message: this.translationService.getFormatted('admin.users.confirmDelete.message', MODULE, user.username),
+      confirmLabel: this.translationService.get('delete', 'OrangepuffPortal.Common')
+    };
 
     this.dialog
       .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })
@@ -106,9 +121,10 @@ export class UserList implements OnInit {
 
         this.userAdminService.delete(user.id).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.dismissLabel());
             this.reload();
           } else {
-            this.snackBar.open(`Could not delete user: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(`${this.translationService.get('admin.users.msg.deleteFailed', MODULE)}: ${res.rejectionReason}`, this.dismissLabel());
           }
         });
       });

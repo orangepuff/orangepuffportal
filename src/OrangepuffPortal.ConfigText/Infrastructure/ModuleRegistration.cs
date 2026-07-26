@@ -5,6 +5,7 @@ using OrangepuffPortal.ConfigText.Contract.Interfaces;
 using OrangepuffPortal.ConfigText.Domain.Repositories;
 using OrangepuffPortal.ConfigText.Infrastructure.Repositories;
 using OrangepuffPortal.Shared.Modules;
+using OrangepuffPortal.Shared.Translation;
 
 namespace OrangepuffPortal.ConfigText.Infrastructure;
 
@@ -29,6 +30,7 @@ public static class ModuleRegistration
         services.AddScoped<IConfigTextWriter, ConfigTextWriter>();
         services.AddScoped<IConfigTextReader, ConfigTextReader>();
         services.AddScoped<IConfigTextAdminService, ConfigTextAdminService>();
+        services.AddScoped<ITranslation, Translation>();
 
         services.AddSingleton<IPortalModule, ConfigTextPortalModule>();
 

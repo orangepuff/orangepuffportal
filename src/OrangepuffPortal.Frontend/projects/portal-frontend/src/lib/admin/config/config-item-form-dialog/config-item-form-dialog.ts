@@ -6,6 +6,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { TranslatePipe } from '../../../translation/translate.pipe';
 import { CONFIG_VALUE_TYPES, ConfigItemRow, ConfigSection } from '../config-item';
 
 export interface ConfigItemFormDialogData {
@@ -30,7 +31,7 @@ export interface ConfigItemFormDialogResult {
 
 @Component({
   selector: 'lib-portal-config-item-form-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatSelectModule, TranslatePipe],
   templateUrl: './config-item-form-dialog.html',
   styleUrl: './config-item-form-dialog.scss'
 })
@@ -38,6 +39,7 @@ export class ConfigItemFormDialog {
   private readonly dialogRef = inject(MatDialogRef<ConfigItemFormDialog, ConfigItemFormDialogResult>);
   protected readonly data = inject<ConfigItemFormDialogData>(MAT_DIALOG_DATA);
 
+  protected readonly module = 'OrangepuffPortal.Frontend';
   protected readonly isEdit = this.data.item !== null;
   protected readonly configValueTypes = CONFIG_VALUE_TYPES;
 

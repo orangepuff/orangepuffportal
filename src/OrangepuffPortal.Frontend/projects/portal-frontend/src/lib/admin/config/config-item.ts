@@ -3,13 +3,11 @@ export interface PagedResult<T> {
   totalCount: number;
 }
 
-export type ConfigValueTypeName = 'String' | 'Integer' | 'Decimal' | 'Boolean';
-
-export const CONFIG_VALUE_TYPES: { value: number; name: ConfigValueTypeName }[] = [
-  { value: 0, name: 'String' },
-  { value: 1, name: 'Integer' },
-  { value: 2, name: 'Decimal' },
-  { value: 3, name: 'Boolean' }
+export const CONFIG_VALUE_TYPES: { value: number; textCode: string }[] = [
+  { value: 0, textCode: 'admin.config.item.valueType.string' },
+  { value: 1, textCode: 'admin.config.item.valueType.integer' },
+  { value: 2, textCode: 'admin.config.item.valueType.decimal' },
+  { value: 3, textCode: 'admin.config.item.valueType.boolean' }
 ];
 
 export interface ConfigSection {
@@ -65,6 +63,7 @@ export interface ConfigCatalogMutationResult {
   success: boolean;
   id: number | null;
   rejectionReason: string | null;
+  successMessage: string | null;
 }
 
 export interface ConfigItemFilter {

@@ -163,7 +163,8 @@ seed call, which is intentionally separate from migration (seeding is data, not 
 
 ## What's out of scope for now
 
-- No per-app authorization on the read endpoint beyond normal portal cookie auth — any signed-in session can
-  read any module's text, which is fine since none of this is sensitive data.
+- `GET /bff/config-text` is anonymous (no auth required at all) — needed so the frontend's
+  `TranslationService` can preload text before it knows whether there's a signed-in session (e.g. the
+  landing/sign-in page), which is fine since none of this is sensitive data.
 - Only `en-US` seed content exists; the `sCultureCode` design already supports more cultures, nothing else
   needs to change to add one.

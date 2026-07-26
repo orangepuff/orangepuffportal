@@ -36,4 +36,5 @@ export interface ConfigTextMutationResult {
   success: boolean;
   id: number | null;
   rejectionReason: string | null;
+  successMessage: string | null;
 }

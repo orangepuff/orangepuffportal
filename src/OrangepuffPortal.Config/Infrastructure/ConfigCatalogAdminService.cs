@@ -4,6 +4,7 @@ using OrangepuffPortal.Config.Contract.Interfaces;
 using OrangepuffPortal.Config.Domain.Entity;
 using OrangepuffPortal.Config.Domain.Repositories;
 using OrangepuffPortal.Shared.Paging;
+using OrangepuffPortal.Shared.Translation;
 
 namespace OrangepuffPortal.Config.Infrastructure;
 
@@ -11,8 +12,13 @@ namespace OrangepuffPortal.Config.Infrastructure;
 /// Admin CRUD over the [config].[ConfigSections]/[Configs] catalog, driven by a signed-in admin from
 /// the Bff — unlike <see cref="ConfigCatalogWriter"/>, which is only ever run by unattended startup seeding.
 /// </summary>
-internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<ConfigCatalogAdminService> logger) : IConfigCatalogAdminService
+internal class ConfigCatalogAdminService(IConfigRepository repository, ITranslation translation, ILogger<ConfigCatalogAdminService> logger) : IConfigCatalogAdminService
 {
+    private const string ModuleName = "OrangepuffPortal.Config";
+
+    private Task<string> TranslateAsync(string reasonCode, CancellationToken cancellationToken) =>
+        translation.TranslateAsync(reasonCode, ModuleName, cancellationToken);
+
     public async Task<IReadOnlyList<ConfigSectionAdminDto>> ListSectionsAsync(CancellationToken cancellationToken = default) =>
         (await repository.ListSectionsAsync(cancellationToken)).Select(ToSectionDto).ToList();
 
@@ -23,7 +29,7 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         if (await repository.ExistsSectionAsync(request.SModule, request.STextCode, null, cancellationToken))
         {
             logger.LogWarning("{LogPrefix}: rejected, duplicate key {Module}/{TextCode}", LogPrefix, request.SModule, request.STextCode);
-            return ConfigCatalogAdminResult.Rejected("duplicate_key");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
         var section = new ConfigSection(request.SModule, request.SSectionDesc, request.STextCode, request.BtShow, DateTime.UtcNow, request.ISortOrder, actorUserId);
@@ -31,7 +37,7 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: created section {Id}", LogPrefix, section.Id);
-        return ConfigCatalogAdminResult.Created(section.Id);
+        return ConfigCatalogAdminResult.Created(section.Id, await TranslateAsync("section_created", cancellationToken));
     }
 
     public async Task<ConfigCatalogAdminResult> UpdateSectionAsync(int id, ConfigSectionUpsertRequest request, int actorUserId, CancellationToken cancellationToken = default)
@@ -42,20 +48,20 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         if (section is null)
         {
             logger.LogWarning("{LogPrefix}: section {Id} not found", LogPrefix, id);
-            return ConfigCatalogAdminResult.Rejected("not_found");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("not_found", cancellationToken));
         }
 
         if (await repository.ExistsSectionAsync(request.SModule, request.STextCode, id, cancellationToken))
         {
             logger.LogWarning("{LogPrefix}: rejected, duplicate key {Module}/{TextCode}", LogPrefix, request.SModule, request.STextCode);
-            return ConfigCatalogAdminResult.Rejected("duplicate_key");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
         section.AdminUpdate(request.SModule, request.SSectionDesc, request.STextCode, request.BtShow, request.ISortOrder, actorUserId, DateTime.UtcNow);
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: updated section {Id}", LogPrefix, id);
-        return ConfigCatalogAdminResult.Updated(id);
+        return ConfigCatalogAdminResult.Updated(id, await TranslateAsync("section_updated", cancellationToken));
     }
 
     public async Task<ConfigCatalogAdminResult> DeleteSectionAsync(int id, CancellationToken cancellationToken = default)
@@ -66,20 +72,20 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         if (section is null)
         {
             logger.LogWarning("{LogPrefix}: section {Id} not found", LogPrefix, id);
-            return ConfigCatalogAdminResult.Rejected("not_found");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("not_found", cancellationToken));
         }
 
         if (await repository.HasConfigsForSectionAsync(id, cancellationToken))
         {
             logger.LogWarning("{LogPrefix}: rejected, section {Id} still has configs", LogPrefix, id);
-            return ConfigCatalogAdminResult.Rejected("section_has_configs");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("section_has_configs", cancellationToken));
         }
 
         await repository.DeleteSectionAsync(section, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: deleted section {Id}", LogPrefix, id);
-        return ConfigCatalogAdminResult.Deleted();
+        return ConfigCatalogAdminResult.Deleted(await TranslateAsync("section_deleted", cancellationToken));
     }
 
     public async Task<PagedResult<ConfigItemAdminDto>> ListConfigsAsync(
@@ -105,13 +111,13 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         if (await repository.GetSectionByIdAsync(request.ISectionId, cancellationToken) is null)
         {
             logger.LogWarning("{LogPrefix}: rejected, section {SectionId} not found", LogPrefix, request.ISectionId);
-            return ConfigCatalogAdminResult.Rejected("section_not_found");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("section_not_found", cancellationToken));
         }
 
         if (await repository.ExistsConfigCodeAsync(request.SConfigCode, null, cancellationToken))
         {
             logger.LogWarning("{LogPrefix}: rejected, duplicate config code {ConfigCode}", LogPrefix, request.SConfigCode);
-            return ConfigCatalogAdminResult.Rejected("duplicate_key");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
         var config = new ConfigItem(
@@ -121,7 +127,7 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: created config {Id}", LogPrefix, config.Id);
-        return ConfigCatalogAdminResult.Created(config.Id);
+        return ConfigCatalogAdminResult.Created(config.Id, await TranslateAsync("config_created", cancellationToken));
     }
 
     public async Task<ConfigCatalogAdminResult> UpdateConfigAsync(int id, ConfigItemUpsertRequest request, int actorUserId, CancellationToken cancellationToken = default)
@@ -132,19 +138,19 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         if (config is null)
         {
             logger.LogWarning("{LogPrefix}: config {Id} not found", LogPrefix, id);
-            return ConfigCatalogAdminResult.Rejected("not_found");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("not_found", cancellationToken));
         }
 
         if (await repository.GetSectionByIdAsync(request.ISectionId, cancellationToken) is null)
         {
             logger.LogWarning("{LogPrefix}: rejected, section {SectionId} not found", LogPrefix, request.ISectionId);
-            return ConfigCatalogAdminResult.Rejected("section_not_found");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("section_not_found", cancellationToken));
         }
 
         if (await repository.ExistsConfigCodeAsync(request.SConfigCode, id, cancellationToken))
         {
             logger.LogWarning("{LogPrefix}: rejected, duplicate config code {ConfigCode}", LogPrefix, request.SConfigCode);
-            return ConfigCatalogAdminResult.Rejected("duplicate_key");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
         config.AdminUpdate(
@@ -153,7 +159,7 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: updated config {Id}", LogPrefix, id);
-        return ConfigCatalogAdminResult.Updated(id);
+        return ConfigCatalogAdminResult.Updated(id, await TranslateAsync("config_updated", cancellationToken));
     }
 
     public async Task<ConfigCatalogAdminResult> DeleteConfigAsync(int id, CancellationToken cancellationToken = default)
@@ -164,14 +170,14 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
         if (config is null)
         {
             logger.LogWarning("{LogPrefix}: config {Id} not found", LogPrefix, id);
-            return ConfigCatalogAdminResult.Rejected("not_found");
+            return ConfigCatalogAdminResult.Rejected(await TranslateAsync("not_found", cancellationToken));
         }
 
         await repository.DeleteConfigAsync(config, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: deleted config {Id}", LogPrefix, id);
-        return ConfigCatalogAdminResult.Deleted();
+        return ConfigCatalogAdminResult.Deleted(await TranslateAsync("config_deleted", cancellationToken));
     }
 
     private static ConfigSectionAdminDto ToSectionDto(ConfigSection section) =>

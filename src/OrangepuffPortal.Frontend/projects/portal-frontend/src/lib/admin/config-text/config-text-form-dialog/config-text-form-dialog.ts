@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { TranslatePipe } from '../../../translation/translate.pipe';
 import { ConfigTextRow } from '../config-text';
 
 export interface ConfigTextFormDialogData {
@@ -21,7 +22,7 @@ export interface ConfigTextFormDialogResult {
 
 @Component({
   selector: 'lib-portal-config-text-form-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, TranslatePipe],
   templateUrl: './config-text-form-dialog.html',
   styleUrl: './config-text-form-dialog.scss'
 })
@@ -29,6 +30,7 @@ export class ConfigTextFormDialog {
   private readonly dialogRef = inject(MatDialogRef<ConfigTextFormDialog, ConfigTextFormDialogResult>);
   protected readonly data = inject<ConfigTextFormDialogData>(MAT_DIALOG_DATA);
 
+  protected readonly module = 'OrangepuffPortal.Frontend';
   protected readonly isEdit = this.data.row !== null;
 
   protected readonly form = new FormGroup({

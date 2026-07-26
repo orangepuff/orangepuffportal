@@ -15,15 +15,20 @@ import { UserSettingsService } from './user-settings.service';
 import { ConfigSettingsService, ConfigValueInput, ConfigValueType, UserConfigItem, UserConfigSection } from './config-settings.service';
 import { UserAdminService } from '../admin/users/user-admin.service';
 import { User } from '../admin/users/user';
+import { TranslatePipe } from '../translation/translate.pipe';
+import { TranslationService } from '../translation/translation.service';
+
+const MODULE = 'OrangepuffPortal.Frontend';
 
 @Component({
   selector: 'lib-portal-settings-page',
-  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule],
+  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss'
 })
 export class SettingsPage {
   protected readonly ConfigValueType = ConfigValueType;
+  protected readonly module = MODULE;
 
   private readonly route = inject(ActivatedRoute);
   protected readonly identityService = inject(IdentityService);
@@ -31,6 +36,7 @@ export class SettingsPage {
   private readonly configSettingsService = inject(ConfigSettingsService);
   private readonly userAdminService = inject(UserAdminService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly translationService = inject(TranslationService);
 
   protected readonly avatarVersion = signal(0);
 
@@ -122,6 +128,10 @@ export class SettingsPage {
     });
   }
 
+  private dismissLabel(): string {
+    return this.translationService.get('dismiss', 'OrangepuffPortal.Common');
+  }
+
   protected getControl(configCode: string): FormControl {
     return this.configControls.get(configCode)!;
   }
@@ -160,9 +170,9 @@ export class SettingsPage {
     request.subscribe((result) => {
       if (result.success) {
         this.avatarVersion.update((v) => v + 1);
-        this.snackBar.open(file ? 'Avatar updated' : 'Avatar removed', 'Dismiss');
+        this.snackBar.open(result.successMessage!, this.dismissLabel());
       } else {
-        this.snackBar.open(`Could not update avatar: ${result.rejectionReason}`, 'Dismiss');
+        this.snackBar.open(`${this.translationService.get('settings.avatar.updateFailed', MODULE)}: ${result.rejectionReason}`, this.dismissLabel());
       }
     });
   }
@@ -185,9 +195,9 @@ export class SettingsPage {
       })
       .subscribe((result) => {
         if (result.success) {
-          this.snackBar.open('Account updated', 'Dismiss');
+          this.snackBar.open(result.successMessage!, this.dismissLabel());
         } else {
-          this.snackBar.open(`Could not update account: ${result.rejectionReason}`, 'Dismiss');
+          this.snackBar.open(`${this.translationService.get('settings.account.updateFailed', MODULE)}: ${result.rejectionReason}`, this.dismissLabel());
         }
       });
   }
@@ -201,9 +211,9 @@ export class SettingsPage {
     this.userSettingsService.updateDisplayName(displayName).subscribe((result) => {
       if (result.success) {
         this.identityService.checkSession().subscribe();
-        this.snackBar.open('Display name updated', 'Dismiss');
+        this.snackBar.open(result.successMessage!, this.dismissLabel());
       } else {
-        this.snackBar.open(`Could not update display name: ${result.rejectionReason}`, 'Dismiss');
+        this.snackBar.open(`${this.translationService.get('settings.profile.displayNameUpdateFailed', MODULE)}: ${result.rejectionReason}`, this.dismissLabel());
       }
     });
   }
@@ -225,9 +235,9 @@ export class SettingsPage {
         // error state matcher keeps showing the now-empty required fields as invalid — resetForm()
         // clears both the model and that flag together.
         formDirective.resetForm();
-        this.snackBar.open('Password changed', 'Dismiss');
+        this.snackBar.open(result.successMessage!, this.dismissLabel());
       } else {
-        this.snackBar.open(`Could not change password: ${result.rejectionReason}`, 'Dismiss');
+        this.snackBar.open(`${this.translationService.get('settings.password.changeFailed', MODULE)}: ${result.rejectionReason}`, this.dismissLabel());
       }
     });
   }
@@ -245,8 +255,8 @@ export class SettingsPage {
     }
 
     forkJoin(requests).subscribe({
-      next: () => this.snackBar.open(`${section.sSectionDesc} saved`, 'Dismiss'),
-      error: () => this.snackBar.open(`Could not save ${section.sSectionDesc}`, 'Dismiss')
+      next: () => this.snackBar.open(this.translationService.getFormatted('settings.config.saved', MODULE, section.sSectionDesc), this.dismissLabel()),
+      error: () => this.snackBar.open(this.translationService.getFormatted('settings.config.saveFailed', MODULE, section.sSectionDesc), this.dismissLabel())
     });
   }
 

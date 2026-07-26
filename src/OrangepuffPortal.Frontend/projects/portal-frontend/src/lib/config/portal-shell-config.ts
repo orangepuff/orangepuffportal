@@ -1,4 +1,5 @@
-import { EnvironmentProviders, InjectionToken, makeEnvironmentProviders } from '@angular/core';
+import { EnvironmentProviders, InjectionToken, inject, makeEnvironmentProviders, provideAppInitializer } from '@angular/core';
+import { TranslationService } from '../translation/translation.service';
 
 export interface PortalShellConfig {
   /** Header brand string and Landing's default title. */
@@ -20,5 +21,11 @@ export interface PortalShellConfig {
 export const PORTAL_SHELL_CONFIG = new InjectionToken<PortalShellConfig>('PORTAL_SHELL_CONFIG');
 
 export function providePortalShell(config: PortalShellConfig): EnvironmentProviders {
-  return makeEnvironmentProviders([{ provide: PORTAL_SHELL_CONFIG, useValue: config }]);
+  return makeEnvironmentProviders([
+    { provide: PORTAL_SHELL_CONFIG, useValue: config },
+    // Preloads ConfigTextDefinition once at bootstrap so the `translate` pipe/TranslationService.get()
+    // have data ready before the first render — automatic for every consuming app, no extra wiring
+    // required there, mirroring the backend's PortalShellTextPortalModule seeding automatically.
+    provideAppInitializer(() => inject(TranslationService).preload('en-US'))
+  ]);
 }

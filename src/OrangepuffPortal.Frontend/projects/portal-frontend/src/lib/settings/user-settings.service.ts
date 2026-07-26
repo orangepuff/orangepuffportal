@@ -4,11 +4,13 @@ import { Injectable, inject } from '@angular/core';
 interface AvatarMutationResult {
   success: boolean;
   rejectionReason: string | null;
+  successMessage: string | null;
 }
 
 interface ProfileMutationResult {
   success: boolean;
   rejectionReason: string | null;
+  successMessage: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

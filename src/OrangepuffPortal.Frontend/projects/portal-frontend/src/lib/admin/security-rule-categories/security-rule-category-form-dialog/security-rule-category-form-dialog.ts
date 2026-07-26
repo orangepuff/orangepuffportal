@@ -5,6 +5,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { TranslatePipe } from '../../../translation/translate.pipe';
 import { SecurityRuleCategory } from '../security-rule-category';
 
 export interface SecurityRuleCategoryFormDialogData {
@@ -19,7 +20,7 @@ export interface SecurityRuleCategoryFormDialogResult {
 
 @Component({
   selector: 'lib-portal-security-rule-category-form-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, TranslatePipe],
   templateUrl: './security-rule-category-form-dialog.html',
   styleUrl: './security-rule-category-form-dialog.scss'
 })
@@ -27,6 +28,7 @@ export class SecurityRuleCategoryFormDialog {
   private readonly dialogRef = inject(MatDialogRef<SecurityRuleCategoryFormDialog, SecurityRuleCategoryFormDialogResult>);
   protected readonly data = inject<SecurityRuleCategoryFormDialogData>(MAT_DIALOG_DATA);
 
+  protected readonly module = 'OrangepuffPortal.Frontend';
   protected readonly isEdit = this.data.category !== null;
 
   protected readonly form = new FormGroup({

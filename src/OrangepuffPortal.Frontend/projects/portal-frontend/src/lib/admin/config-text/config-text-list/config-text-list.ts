@@ -9,9 +9,13 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { ConfirmDialog, ConfirmDialogData } from '@orangepuff/portal-frontend-shared';
+import { TranslatePipe } from '../../../translation/translate.pipe';
+import { TranslationService } from '../../../translation/translation.service';
 import { ConfigTextAdminService } from '../config-text-admin.service';
 import { ConfigTextFilter, ConfigTextRow } from '../config-text';
 import { ConfigTextFormDialog, ConfigTextFormDialogData, ConfigTextFormDialogResult } from '../config-text-form-dialog/config-text-form-dialog';
+
+const MODULE = 'OrangepuffPortal.Frontend';
 
 @Component({
   selector: 'lib-portal-config-text-list',
@@ -23,7 +27,8 @@ import { ConfigTextFormDialog, ConfigTextFormDialogData, ConfigTextFormDialogRes
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    TranslatePipe
   ],
   templateUrl: './config-text-list.html',
   styleUrl: './config-text-list.scss'
@@ -32,7 +37,9 @@ export class ConfigTextList implements OnInit {
   private readonly configTextAdminService = inject(ConfigTextAdminService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly translationService = inject(TranslationService);
 
+  protected readonly module = MODULE;
   protected readonly rows = signal<ConfigTextRow[]>([]);
   protected readonly totalCount = signal(0);
   protected readonly displayedColumns = ['sModule', 'sTextCode', 'sCultureCode', 'sTextType', 'sText', 'sNote', 'actions'];
@@ -87,6 +94,10 @@ export class ConfigTextList implements OnInit {
     });
   }
 
+  private dismissLabel(): string {
+    return this.translationService.get('dismiss', 'OrangepuffPortal.Common');
+  }
+
   protected openAddDialog(): void {
     const data: ConfigTextFormDialogData = { row: null };
 
@@ -100,9 +111,10 @@ export class ConfigTextList implements OnInit {
 
         this.configTextAdminService.add(result).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.dismissLabel());
             this.reload();
           } else {
-            this.snackBar.open(`Could not add text: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(`${this.translationService.get('admin.configText.msg.addFailed', MODULE)}: ${res.rejectionReason}`, this.dismissLabel());
           }
         });
       });
@@ -121,16 +133,25 @@ export class ConfigTextList implements OnInit {
 
         this.configTextAdminService.update(row.id, result).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.dismissLabel());
             this.reload();
           } else {
-            this.snackBar.open(`Could not update text: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(`${this.translationService.get('admin.configText.msg.updateFailed', MODULE)}: ${res.rejectionReason}`, this.dismissLabel());
           }
         });
       });
   }
 
   protected deleteRow(row: ConfigTextRow): void {
-    const data: ConfirmDialogData = { title: 'Delete text', message: `Delete "${row.sModule}/${row.sTextCode}" (${row.sCultureCode})?`, confirmLabel: 'Delete' };
+    const data: ConfirmDialogData = {
+      title: this.translationService.get('admin.configText.confirmDelete.title', MODULE),
+      message: this.translationService.getFormatted(
+        'admin.configText.confirmDelete.message',
+        MODULE,
+        `${row.sModule}/${row.sTextCode} (${row.sCultureCode})`
+      ),
+      confirmLabel: this.translationService.get('delete', 'OrangepuffPortal.Common')
+    };
 
     this.dialog
       .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })
@@ -142,9 +163,10 @@ export class ConfigTextList implements OnInit {
 
         this.configTextAdminService.delete(row.id).subscribe((res) => {
           if (res.success) {
+            this.snackBar.open(res.successMessage!, this.dismissLabel());
             this.reload();
           } else {
-            this.snackBar.open(`Could not delete text: ${res.rejectionReason}`, 'Dismiss');
+            this.snackBar.open(`${this.translationService.get('admin.configText.msg.deleteFailed', MODULE)}: ${res.rejectionReason}`, this.dismissLabel());
           }
         });
       });

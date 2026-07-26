@@ -6,6 +6,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { TranslatePipe } from '../../../translation/translate.pipe';
 import { User } from '../user';
 
 export interface UserFormDialogData {
@@ -24,13 +25,14 @@ export interface UserFormDialogResult {
 /** Add-user only — editing an existing user's account now lives on its Settings page. */
 @Component({
   selector: 'lib-portal-user-form-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatSelectModule, TranslatePipe],
   templateUrl: './user-form-dialog.html',
   styleUrl: './user-form-dialog.scss'
 })
 export class UserFormDialog {
   private readonly dialogRef = inject(MatDialogRef<UserFormDialog, UserFormDialogResult>);
   protected readonly data = inject<UserFormDialogData>(MAT_DIALOG_DATA);
+  protected readonly module = 'OrangepuffPortal.Frontend';
 
   protected readonly form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),

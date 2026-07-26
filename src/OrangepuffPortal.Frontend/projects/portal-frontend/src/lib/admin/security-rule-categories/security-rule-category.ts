@@ -19,4 +19,5 @@ export interface UpdateSecurityRuleCategoryRequest {
 export interface SecurityRuleCategoryMutationResult {
   success: boolean;
   rejectionReason: string | null;
+  successMessage: string | null;
 }
