@@ -1,0 +1,26 @@
+.config-admin-page {
+  padding: 16px;
+}
+
+.config-admin-page__tab {
+  padding: 16px 0;
+}
+
+.config-admin-page__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.config-admin-page__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.config-admin-page__table {
+  width: 100%;
+}

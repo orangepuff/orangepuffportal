@@ -1,20 +1,42 @@
 using OrangepuffPortal.Config.Domain.Entity;
+using OrangepuffPortal.Shared.Paging;
 
 namespace OrangepuffPortal.Config.Domain.Repositories;
 
 public interface IConfigRepository
 {
-    // Catalog
+    // Catalog — sections
     Task<ConfigSection?> FindSectionAsync(string module, string textCode, CancellationToken cancellationToken = default);
+
+    Task<ConfigSection?> GetSectionByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>Unpaged — the catalog's sections are expected to stay a small, hand-curated list.</summary>
+    Task<IReadOnlyList<ConfigSection>> ListSectionsAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> ExistsSectionAsync(string module, string textCode, int? excludeId, CancellationToken cancellationToken = default);
 
     Task AddSectionAsync(ConfigSection section, CancellationToken cancellationToken = default);
 
+    Task DeleteSectionAsync(ConfigSection section, CancellationToken cancellationToken = default);
+
+    // Catalog — configs
     Task<ConfigItem?> FindConfigByCodeAsync(string configCode, CancellationToken cancellationToken = default);
 
-    Task AddConfigAsync(ConfigItem config, CancellationToken cancellationToken = default);
+    Task<ConfigItem?> GetConfigByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    Task<PagedResult<ConfigItem>> ListConfigsAsync(
+        int? sectionId, string? configCode, string? configName, int? configType, int skip, int take, CancellationToken cancellationToken = default);
+
+    Task<bool> ExistsConfigCodeAsync(string configCode, int? excludeId, CancellationToken cancellationToken = default);
+
+    Task<bool> HasConfigsForSectionAsync(int sectionId, CancellationToken cancellationToken = default);
 
     /// <summary>Every config that has at least one default value field set — used to apply defaults onto a newly-created user.</summary>
     Task<IReadOnlyList<ConfigItem>> ListConfigsWithDefaultAsync(CancellationToken cancellationToken = default);
+
+    Task AddConfigAsync(ConfigItem config, CancellationToken cancellationToken = default);
+
+    Task DeleteConfigAsync(ConfigItem config, CancellationToken cancellationToken = default);
 
     // Values
     Task<ConfigUser?> FindUserValueAsync(int userId, int configId, CancellationToken cancellationToken = default);

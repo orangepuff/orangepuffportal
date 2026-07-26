@@ -200,6 +200,22 @@ of its own — it does have one MediatR *notification handler*, see "Default val
   self-service write endpoint, not built yet since the current settings UI is admin-write / user-read-only
   by design).
 
+`ConfigGateway` also forwards to `IConfigCatalogAdminService` (`ConfigCatalogAdminService`, added alongside
+the seed-only `ConfigCatalogWriter`) for the "Manage config" admin screen (`admin/config` in
+`@orangepuff/portal-frontend`) — full CRUD over the catalog itself, not just a user's values. The screen has
+two tabs: **Sections** (small, unpaged CRUD, `ConfigSections` is expected to stay a hand-curated list) and
+**Configs** (paginated — default page size 50, 50/100/200/500 selectable — and filterable by section,
+config code, and config name):
+
+- `GET/POST /bff/admin/config/sections`, `PUT/DELETE /bff/admin/config/sections/{id}`
+- `GET /bff/admin/config/items?sectionId=&configCode=&configName=&configType=&page=&pageSize=`,
+  `POST /bff/admin/config/items`, `PUT/DELETE /bff/admin/config/items/{id}`
+
+A section can't be deleted while any config still references it (`section_has_configs` rejection). Admin
+writes go through `ConfigSection.AdminUpdate`/`ConfigItem.AdminUpdate` (full-field update, distinct from the
+seed-only `Replace`) and reject on a duplicate key (`(sModule, sTextCode)` for sections, `sConfigCode` for
+configs).
+
 ## Default values
 
 `Configs` carries an optional default (`sDefaultValue`/`iDefaultValue`/`nDefaultValue`/`btDefaultValue`,

@@ -34,7 +34,8 @@ public class ConfigItem
 
     public ConfigItem(
         int sectionId, string configCode, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow,
-        int? sortOrder = null, string? defaultStringValue = null, int? defaultIntValue = null, decimal? defaultDecimalValue = null, bool? defaultBoolValue = null)
+        int? sortOrder = null, string? defaultStringValue = null, int? defaultIntValue = null, decimal? defaultDecimalValue = null, bool? defaultBoolValue = null,
+        int? insertedUserId = null)
     {
         if (string.IsNullOrWhiteSpace(configCode))
         {
@@ -64,6 +65,7 @@ public class ConfigItem
         DefaultDecimalValue = defaultDecimalValue;
         DefaultBoolValue = defaultBoolValue;
         InsertedTime = utcNow;
+        InsertedUserId = insertedUserId;
     }
 
     /// <summary>Has any default value field been set — used to decide whether a newly-created config needs backfilling onto existing users.</summary>
@@ -86,6 +88,42 @@ public class ConfigItem
         DefaultIntValue = defaultIntValue;
         DefaultDecimalValue = defaultDecimalValue;
         DefaultBoolValue = defaultBoolValue;
+        UpdatedTime = utcNow;
+    }
+
+    /// <summary>Full-field overwrite from the admin CRUD screen — unlike <see cref="Replace"/>, this also stamps <see cref="UpdatedUserId"/> and may change <see cref="ConfigCode"/>.</summary>
+    public void AdminUpdate(
+        int sectionId, string configCode, string configName, string textCode, int configType, bool show, bool allowUserEdit, int? sortOrder,
+        string? defaultStringValue, int? defaultIntValue, decimal? defaultDecimalValue, bool? defaultBoolValue, int? updatedUserId, DateTime utcNow)
+    {
+        if (string.IsNullOrWhiteSpace(configCode))
+        {
+            throw new ArgumentException("ConfigCode is required.", nameof(configCode));
+        }
+
+        if (string.IsNullOrWhiteSpace(configName))
+        {
+            throw new ArgumentException("ConfigName is required.", nameof(configName));
+        }
+
+        if (string.IsNullOrWhiteSpace(textCode))
+        {
+            throw new ArgumentException("TextCode is required.", nameof(textCode));
+        }
+
+        SectionId = sectionId;
+        ConfigCode = configCode.Trim();
+        ConfigName = configName.Trim();
+        TextCode = textCode.Trim();
+        ConfigType = configType;
+        Show = show;
+        AllowUserEdit = allowUserEdit;
+        SortOrder = sortOrder;
+        DefaultStringValue = defaultStringValue;
+        DefaultIntValue = defaultIntValue;
+        DefaultDecimalValue = defaultDecimalValue;
+        DefaultBoolValue = defaultBoolValue;
+        UpdatedUserId = updatedUserId;
         UpdatedTime = utcNow;
     }
 }

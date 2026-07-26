@@ -28,6 +28,7 @@ public static class ModuleRegistration
         services.AddSingleton<ConfigTextCache>();
         services.AddScoped<IConfigTextWriter, ConfigTextWriter>();
         services.AddScoped<IConfigTextReader, ConfigTextReader>();
+        services.AddScoped<IConfigTextAdminService, ConfigTextAdminService>();
 
         services.AddSingleton<IPortalModule, ConfigTextPortalModule>();
 

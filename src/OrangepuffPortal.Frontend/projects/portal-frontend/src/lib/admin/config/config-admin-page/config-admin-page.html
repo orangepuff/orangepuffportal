@@ -1,0 +1,132 @@
+<div class="config-admin-page">
+  <h1>Config</h1>
+
+  <mat-tab-group>
+    <mat-tab label="Configs">
+      <div class="config-admin-page__tab">
+        <div class="config-admin-page__toolbar">
+          <button mat-flat-button type="button" (click)="openAddConfigDialog()">Add config</button>
+        </div>
+
+        <form [formGroup]="filterForm" (ngSubmit)="applyFilter()" class="config-admin-page__filters">
+          <mat-form-field appearance="outline">
+            <mat-label>Section</mat-label>
+            <mat-select formControlName="sectionId">
+              <mat-option [value]="null">(any)</mat-option>
+              @for (section of sections(); track section.id) {
+                <mat-option [value]="section.id">{{ section.sSectionDesc }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Config code</mat-label>
+            <input matInput formControlName="configCode" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Config name</mat-label>
+            <input matInput formControlName="configName" />
+          </mat-form-field>
+
+          <button mat-flat-button type="submit">Search</button>
+          <button mat-button type="button" (click)="clearFilter()">Clear</button>
+        </form>
+
+        <table mat-table [dataSource]="items()" class="config-admin-page__table">
+          <ng-container matColumnDef="sSectionDesc">
+            <th mat-header-cell *matHeaderCellDef>Section</th>
+            <td mat-cell *matCellDef="let item">{{ item.sSectionDesc }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="sConfigCode">
+            <th mat-header-cell *matHeaderCellDef>Config code</th>
+            <td mat-cell *matCellDef="let item">{{ item.sConfigCode }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="sConfigName">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let item">{{ item.sConfigName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="iConfigType">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let item">{{ configTypeName(item) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="btShow">
+            <th mat-header-cell *matHeaderCellDef>Shown</th>
+            <td mat-cell *matCellDef="let item">{{ item.btShow ? 'Yes' : 'No' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="btAllowUserEdit">
+            <th mat-header-cell *matHeaderCellDef>User-editable</th>
+            <td mat-cell *matCellDef="let item">{{ item.btAllowUserEdit ? 'Yes' : 'No' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let item">
+              <button mat-icon-button type="button" (click)="openEditConfigDialog(item)" aria-label="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button type="button" (click)="deleteConfig(item)" aria-label="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="itemColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: itemColumns"></tr>
+        </table>
+
+        <mat-paginator [length]="totalCount()" [pageSize]="50" [pageSizeOptions]="pageSizeOptions" (page)="onPage($event)"></mat-paginator>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Sections">
+      <div class="config-admin-page__tab">
+        <div class="config-admin-page__toolbar">
+          <button mat-flat-button type="button" (click)="openAddSectionDialog()">Add section</button>
+        </div>
+
+        <table mat-table [dataSource]="sections()" class="config-admin-page__table">
+          <ng-container matColumnDef="sModule">
+            <th mat-header-cell *matHeaderCellDef>Module</th>
+            <td mat-cell *matCellDef="let section">{{ section.sModule }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="sSectionDesc">
+            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <td mat-cell *matCellDef="let section">{{ section.sSectionDesc }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="sTextCode">
+            <th mat-header-cell *matHeaderCellDef>Text code</th>
+            <td mat-cell *matCellDef="let section">{{ section.sTextCode }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="btShow">
+            <th mat-header-cell *matHeaderCellDef>Shown</th>
+            <td mat-cell *matCellDef="let section">{{ section.btShow ? 'Yes' : 'No' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let section">
+              <button mat-icon-button type="button" (click)="openEditSectionDialog(section)" aria-label="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button type="button" (click)="deleteSection(section)" aria-label="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="sectionColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: sectionColumns"></tr>
+        </table>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

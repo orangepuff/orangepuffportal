@@ -22,6 +22,7 @@ public static class ModuleRegistration
 
         services.AddScoped<IConfigRepository, ConfigRepository>();
         services.AddScoped<IConfigCatalogWriter, ConfigCatalogWriter>();
+        services.AddScoped<IConfigCatalogAdminService, ConfigCatalogAdminService>();
         services.AddScoped<IConfigUserValueService, ConfigUserValueService>();
 
         services.AddSingleton<IPortalModule, ConfigPortalModule>();

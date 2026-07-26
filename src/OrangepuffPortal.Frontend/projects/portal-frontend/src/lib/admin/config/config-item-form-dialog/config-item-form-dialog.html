@@ -1,0 +1,75 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit config' : 'Add config' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <mat-dialog-content class="config-item-form-dialog__content">
+    <mat-form-field appearance="outline">
+      <mat-label>Section</mat-label>
+      <mat-select formControlName="iSectionId">
+        @for (section of data.sections; track section.id) {
+          <mat-option [value]="section.id">{{ section.sSectionDesc }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Config code</mat-label>
+      <input matInput formControlName="sConfigCode" [readonly]="isEdit" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Config name</mat-label>
+      <input matInput formControlName="sConfigName" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Text code (i18n key)</mat-label>
+      <input matInput formControlName="sTextCode" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Value type</mat-label>
+      <mat-select formControlName="iConfigType">
+        @for (type of configValueTypes; track type.value) {
+          <mat-option [value]="type.value">{{ type.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @switch (form.controls.iConfigType.value) {
+      @case (0) {
+        <mat-form-field appearance="outline">
+          <mat-label>Default value</mat-label>
+          <input matInput formControlName="sDefaultValue" />
+        </mat-form-field>
+      }
+      @case (1) {
+        <mat-form-field appearance="outline">
+          <mat-label>Default value</mat-label>
+          <input matInput type="number" formControlName="iDefaultValue" />
+        </mat-form-field>
+      }
+      @case (2) {
+        <mat-form-field appearance="outline">
+          <mat-label>Default value</mat-label>
+          <input matInput type="number" formControlName="nDefaultValue" />
+        </mat-form-field>
+      }
+      @case (3) {
+        <mat-checkbox formControlName="btDefaultValue">Default value</mat-checkbox>
+      }
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Sort order</mat-label>
+      <input matInput type="number" formControlName="iSortOrder" />
+    </mat-form-field>
+
+    <mat-checkbox formControlName="btShow">Shown in a settings UI</mat-checkbox>
+    <mat-checkbox formControlName="btAllowUserEdit">User may self-service edit</mat-checkbox>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="form.invalid">Save</button>
+  </mat-dialog-actions>
+</form>

@@ -24,7 +24,7 @@ public class ConfigSection
 
     private ConfigSection() { } // EF
 
-    public ConfigSection(string module, string sectionDesc, string textCode, bool show, DateTime utcNow, int? sortOrder = null)
+    public ConfigSection(string module, string sectionDesc, string textCode, bool show, DateTime utcNow, int? sortOrder = null, int? insertedUserId = null)
     {
         if (string.IsNullOrWhiteSpace(module))
         {
@@ -47,6 +47,7 @@ public class ConfigSection
         Show = show;
         SortOrder = sortOrder;
         InsertedTime = utcNow;
+        InsertedUserId = insertedUserId;
     }
 
     /// <summary>Overwrite an already-seeded section (only reached when the seed entry sets btReplace).</summary>
@@ -55,6 +56,33 @@ public class ConfigSection
         SectionDesc = sectionDesc.Trim();
         Show = show;
         SortOrder = sortOrder;
+        UpdatedTime = utcNow;
+    }
+
+    /// <summary>Full-field overwrite from the admin CRUD screen — unlike <see cref="Replace"/>, this may also change the row's <see cref="Module"/>/<see cref="TextCode"/>.</summary>
+    public void AdminUpdate(string module, string sectionDesc, string textCode, bool show, int? sortOrder, int? updatedUserId, DateTime utcNow)
+    {
+        if (string.IsNullOrWhiteSpace(module))
+        {
+            throw new ArgumentException("Module is required.", nameof(module));
+        }
+
+        if (string.IsNullOrWhiteSpace(sectionDesc))
+        {
+            throw new ArgumentException("SectionDesc is required.", nameof(sectionDesc));
+        }
+
+        if (string.IsNullOrWhiteSpace(textCode))
+        {
+            throw new ArgumentException("TextCode is required.", nameof(textCode));
+        }
+
+        Module = module.Trim();
+        SectionDesc = sectionDesc.Trim();
+        TextCode = textCode.Trim();
+        Show = show;
+        SortOrder = sortOrder;
+        UpdatedUserId = updatedUserId;
         UpdatedTime = utcNow;
     }
 }

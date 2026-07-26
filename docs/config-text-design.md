@@ -36,9 +36,26 @@ See [`config-text-schema.sql`](config-text-schema.sql) for the exact `CREATE TAB
 only — the real schema is owned by the `ConfigTextDbContext` EF Core migration under
 `src/OrangepuffPortal.ConfigText/Infrastructure/Migrations`).
 
+## Admin CRUD
+
+A "Manage config text" admin screen (`admin/config-text` in `@orangepuff/portal-frontend`, backed by
+`OrangepuffPortal.ConfigText.Contract.Interfaces.IConfigTextAdminService` / `ConfigTextAdminService`) lets an
+admin list, add, edit, and delete rows directly, independent of the seed path below. It is paginated
+(default page size 50; 50/100/200/500 selectable) and filterable by module, text code, culture code, text
+type, and a free-text search over `sText`. Mapped under the `AdminOnly`-gated `/bff/admin` group:
+
+- `GET /bff/admin/config-text?module=&textCode=&cultureCode=&textType=&text=&page=&pageSize=`
+- `POST /bff/admin/config-text`
+- `PUT /bff/admin/config-text/{id}`
+- `DELETE /bff/admin/config-text/{id}`
+
+Admin writes go through `ConfigTextDefinition.AdminUpdate` (full-field update, including the row's identity
+fields) rather than the seed-only `Replace`, reject on a duplicate `(module, textCode, cultureCode, textType)`
+key, and invalidate `ConfigTextCache` the same way `ConfigTextWriter` does.
+
 ## Write path — seeding, not admin editing
 
-There is deliberately no admin UI for this table yet. Each consuming app owns its own default text as a
+Each consuming app also owns its own default text as a
 source-controlled seed file (JSON, one per culture, living in that app's own repo) and pushes it into this
 table at its own startup, in-process, through `IConfigTextWriter` (`OrangepuffPortal.ConfigText.Contract`):
 
@@ -127,7 +144,6 @@ seed call, which is intentionally separate from migration (seeding is data, not 
 
 ## What's out of scope for now
 
-- No admin UI / CRUD endpoint to edit rows directly — `btReplace` plus redeploy is the only update path.
 - No per-app authorization on the read endpoint beyond normal portal cookie auth — any signed-in session can
   read any module's text, which is fine since none of this is sensitive data.
 - Only `en-US` seed content exists; the `sCultureCode` design already supports more cultures, nothing else
