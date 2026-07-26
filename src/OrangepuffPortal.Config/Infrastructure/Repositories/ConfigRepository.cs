@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using OrangepuffPortal.Config.Domain.Entity;
 using OrangepuffPortal.Config.Domain.Repositories;
 using OrangepuffPortal.Shared.Paging;
+using System.Linq.Expressions;
 
 namespace OrangepuffPortal.Config.Infrastructure.Repositories;
 
@@ -37,7 +38,7 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
         db.Configs.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
     public async Task<PagedResult<ConfigItem>> ListConfigsAsync(
-        int? sectionId, string? configCode, string? configName, int? configType, int skip, int take, CancellationToken cancellationToken = default)
+        int? sectionId, string? configCode, string? configName, int? configType, string? sortBy, bool sortDescending, int skip, int take, CancellationToken cancellationToken = default)
     {
         var query = db.Configs.AsNoTracking().AsQueryable();
 
@@ -62,14 +63,32 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
-        var items = await query
-            .OrderBy(x => x.SectionId).ThenBy(x => x.SortOrder ?? int.MaxValue).ThenBy(x => x.Id)
+
+        // "section" sorts by the parent ConfigSections.sSectionDesc via a correlated subquery rather
+        // than SectionId, since that's what the admin grid actually displays in that column.
+        IOrderedQueryable<ConfigItem> ordered = sortBy switch
+        {
+            "section" => Order(query, x => db.ConfigSections.Where(s => s.Id == x.SectionId).Select(s => s.SectionDesc).FirstOrDefault(), sortDescending),
+            "configCode" => Order(query, x => x.ConfigCode, sortDescending),
+            "configName" => Order(query, x => x.ConfigName, sortDescending),
+            "configType" => Order(query, x => x.ConfigType, sortDescending),
+            "show" => Order(query, x => x.Show, sortDescending),
+            "allowUserEdit" => Order(query, x => x.AllowUserEdit, sortDescending),
+            "sortOrder" => Order(query, x => x.SortOrder ?? int.MaxValue, sortDescending),
+            _ => query.OrderBy(x => x.SectionId).ThenBy(x => x.SortOrder ?? int.MaxValue)
+        };
+
+        var items = await ordered
+            .ThenBy(x => x.Id)
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ConfigItem>(items, totalCount);
     }
+
+    private static IOrderedQueryable<ConfigItem> Order<TKey>(IQueryable<ConfigItem> query, Expression<Func<ConfigItem, TKey>> keySelector, bool descending) =>
+        descending ? query.OrderByDescending(keySelector) : query.OrderBy(keySelector);
 
     public Task<bool> ExistsConfigCodeAsync(string configCode, int? excludeId, CancellationToken cancellationToken = default) =>
         db.Configs.AnyAsync(x => x.ConfigCode == configCode && x.Id != (excludeId ?? -1), cancellationToken);

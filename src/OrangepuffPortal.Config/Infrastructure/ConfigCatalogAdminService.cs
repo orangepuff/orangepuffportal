@@ -83,10 +83,10 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ILogger<C
     }
 
     public async Task<PagedResult<ConfigItemAdminDto>> ListConfigsAsync(
-        int? sectionId, string? configCode, string? configName, int? configType, int page, int pageSize, CancellationToken cancellationToken = default)
+        int? sectionId, string? configCode, string? configName, int? configType, string? sortBy, bool sortDescending, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var skip = Math.Max(0, page - 1) * pageSize;
-        var result = await repository.ListConfigsAsync(sectionId, configCode, configName, configType, skip, pageSize, cancellationToken);
+        var result = await repository.ListConfigsAsync(sectionId, configCode, configName, configType, sortBy, sortDescending, skip, pageSize, cancellationToken);
 
         if (result.Items.Count == 0)
         {

@@ -30,8 +30,8 @@ export class ConfigAdminService {
     return this.http.delete<ConfigCatalogMutationResult>(`/bff/admin/config/sections/${id}`);
   }
 
-  listConfigs(filter: ConfigItemFilter, page: number, pageSize: number) {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  listConfigs(filter: ConfigItemFilter, sortBy: string | null, sortDescending: boolean, page: number, pageSize: number) {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize).set('sortDescending', sortDescending);
     if (filter.sectionId !== undefined) {
       params = params.set('sectionId', filter.sectionId);
     }
@@ -43,6 +43,9 @@ export class ConfigAdminService {
     }
     if (filter.configType !== undefined) {
       params = params.set('configType', filter.configType);
+    }
+    if (sortBy) {
+      params = params.set('sortBy', sortBy);
     }
 
     return this.http.get<PagedResult<ConfigItemRow>>('/bff/admin/config/items', { params });

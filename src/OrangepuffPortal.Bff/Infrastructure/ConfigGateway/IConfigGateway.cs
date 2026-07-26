@@ -17,7 +17,7 @@ namespace OrangepuffPortal.Bff.Infrastructure.ConfigGateway
         Task<ConfigCatalogAdminResult> DeleteSectionAsync(int id, CancellationToken ct = default);
 
         Task<PagedResult<ConfigItemAdminDto>> ListConfigsAsync(
-            int? sectionId, string? configCode, string? configName, int? configType, int page, int pageSize, CancellationToken ct = default);
+            int? sectionId, string? configCode, string? configName, int? configType, string? sortBy, bool sortDescending, int page, int pageSize, CancellationToken ct = default);
         Task<ConfigCatalogAdminResult> AddConfigAsync(ConfigItemUpsertRequest request, int actorUserId, CancellationToken ct = default);
         Task<ConfigCatalogAdminResult> UpdateConfigAsync(int id, ConfigItemUpsertRequest request, int actorUserId, CancellationToken ct = default);
         Task<ConfigCatalogAdminResult> DeleteConfigAsync(int id, CancellationToken ct = default);

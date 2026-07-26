@@ -33,35 +33,63 @@
           <button mat-button type="button" (click)="clearFilter()">Clear</button>
         </form>
 
-        <table mat-table [dataSource]="items()" class="config-admin-page__table">
+        <div class="config-admin-page__loading-bar">
+          @if (itemsLoading()) {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          }
+        </div>
+
+        <table mat-table [dataSource]="items()" matSort (matSortChange)="onSortChange($event)" class="config-admin-page__table">
           <ng-container matColumnDef="sSectionDesc">
-            <th mat-header-cell *matHeaderCellDef>Section</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="section">Section</th>
             <td mat-cell *matCellDef="let item">{{ item.sSectionDesc }}</td>
           </ng-container>
 
           <ng-container matColumnDef="sConfigCode">
-            <th mat-header-cell *matHeaderCellDef>Config code</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="configCode">Config code</th>
             <td mat-cell *matCellDef="let item">{{ item.sConfigCode }}</td>
           </ng-container>
 
           <ng-container matColumnDef="sConfigName">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="configName">Name</th>
             <td mat-cell *matCellDef="let item">{{ item.sConfigName }}</td>
           </ng-container>
 
           <ng-container matColumnDef="iConfigType">
-            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="configType">Type</th>
             <td mat-cell *matCellDef="let item">{{ configTypeName(item) }}</td>
           </ng-container>
 
           <ng-container matColumnDef="btShow">
-            <th mat-header-cell *matHeaderCellDef>Shown</th>
-            <td mat-cell *matCellDef="let item">{{ item.btShow ? 'Yes' : 'No' }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="show">Shown</th>
+            <td mat-cell *matCellDef="let item">
+              @if (item.btShow) {
+                <mat-icon class="config-admin-page__bool-icon config-admin-page__bool-icon--yes" aria-label="Yes">check</mat-icon>
+              } @else {
+                <mat-icon class="config-admin-page__bool-icon config-admin-page__bool-icon--no" aria-label="No">close</mat-icon>
+              }
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="btAllowUserEdit">
-            <th mat-header-cell *matHeaderCellDef>User-editable</th>
-            <td mat-cell *matCellDef="let item">{{ item.btAllowUserEdit ? 'Yes' : 'No' }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="allowUserEdit">User-editable</th>
+            <td mat-cell *matCellDef="let item">
+              @if (item.btAllowUserEdit) {
+                <mat-icon class="config-admin-page__bool-icon config-admin-page__bool-icon--yes" aria-label="Yes">check</mat-icon>
+              } @else {
+                <mat-icon class="config-admin-page__bool-icon config-admin-page__bool-icon--no" aria-label="No">close</mat-icon>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="iSortOrder">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="sortOrder">Sort order</th>
+            <td mat-cell *matCellDef="let item">{{ item.iSortOrder ?? '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="defaultValue">
+            <th mat-header-cell *matHeaderCellDef>Default value</th>
+            <td mat-cell *matCellDef="let item">{{ defaultValueDisplay(item) }}</td>
           </ng-container>
 
           <ng-container matColumnDef="actions">
@@ -90,25 +118,31 @@
           <button mat-flat-button type="button" (click)="openAddSectionDialog()">Add section</button>
         </div>
 
-        <table mat-table [dataSource]="sections()" class="config-admin-page__table">
+        <table mat-table [dataSource]="sectionsDataSource" matSort #sectionSort="matSort" class="config-admin-page__table">
           <ng-container matColumnDef="sModule">
-            <th mat-header-cell *matHeaderCellDef>Module</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Module</th>
             <td mat-cell *matCellDef="let section">{{ section.sModule }}</td>
           </ng-container>
 
           <ng-container matColumnDef="sSectionDesc">
-            <th mat-header-cell *matHeaderCellDef>Description</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
             <td mat-cell *matCellDef="let section">{{ section.sSectionDesc }}</td>
           </ng-container>
 
           <ng-container matColumnDef="sTextCode">
-            <th mat-header-cell *matHeaderCellDef>Text code</th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Text code</th>
             <td mat-cell *matCellDef="let section">{{ section.sTextCode }}</td>
           </ng-container>
 
           <ng-container matColumnDef="btShow">
-            <th mat-header-cell *matHeaderCellDef>Shown</th>
-            <td mat-cell *matCellDef="let section">{{ section.btShow ? 'Yes' : 'No' }}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Shown</th>
+            <td mat-cell *matCellDef="let section">
+              @if (section.btShow) {
+                <mat-icon class="config-admin-page__bool-icon config-admin-page__bool-icon--yes" aria-label="Yes">check</mat-icon>
+              } @else {
+                <mat-icon class="config-admin-page__bool-icon config-admin-page__bool-icon--no" aria-label="No">close</mat-icon>
+              }
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="actions">

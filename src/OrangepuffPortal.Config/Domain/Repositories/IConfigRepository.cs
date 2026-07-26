@@ -24,8 +24,13 @@ public interface IConfigRepository
 
     Task<ConfigItem?> GetConfigByIdAsync(int id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// <paramref name="sortBy"/> is one of: "section", "configCode", "configName", "configType",
+    /// "show", "allowUserEdit", "sortOrder" — anything else (including null) falls back to the
+    /// default ordering (section, then sort order, then id).
+    /// </summary>
     Task<PagedResult<ConfigItem>> ListConfigsAsync(
-        int? sectionId, string? configCode, string? configName, int? configType, int skip, int take, CancellationToken cancellationToken = default);
+        int? sectionId, string? configCode, string? configName, int? configType, string? sortBy, bool sortDescending, int skip, int take, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsConfigCodeAsync(string configCode, int? excludeId, CancellationToken cancellationToken = default);
 

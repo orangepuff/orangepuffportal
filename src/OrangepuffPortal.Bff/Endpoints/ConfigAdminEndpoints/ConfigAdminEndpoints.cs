@@ -46,9 +46,9 @@ namespace OrangepuffPortal.Bff.Endpoints.ConfigAdminEndpoints
                 return Results.Ok(result);
             });
 
-            app.MapGet("/config/items", async (int? sectionId, string? configCode, string? configName, int? configType, int? page, int? pageSize, IConfigGateway gateway, CancellationToken ct) =>
+            app.MapGet("/config/items", async (int? sectionId, string? configCode, string? configName, int? configType, string? sortBy, bool? sortDescending, int? page, int? pageSize, IConfigGateway gateway, CancellationToken ct) =>
             {
-                var result = await gateway.ListConfigsAsync(sectionId, configCode, configName, configType, page ?? 1, pageSize ?? 50, ct);
+                var result = await gateway.ListConfigsAsync(sectionId, configCode, configName, configType, sortBy, sortDescending ?? false, page ?? 1, pageSize ?? 50, ct);
                 return Results.Ok(result);
             });
 

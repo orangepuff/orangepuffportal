@@ -17,7 +17,7 @@ public interface IConfigCatalogAdminService
     Task<ConfigCatalogAdminResult> DeleteSectionAsync(int id, CancellationToken cancellationToken = default);
 
     Task<PagedResult<ConfigItemAdminDto>> ListConfigsAsync(
-        int? sectionId, string? configCode, string? configName, int? configType, int page, int pageSize, CancellationToken cancellationToken = default);
+        int? sectionId, string? configCode, string? configName, int? configType, string? sortBy, bool sortDescending, int page, int pageSize, CancellationToken cancellationToken = default);
 
     Task<ConfigCatalogAdminResult> AddConfigAsync(ConfigItemUpsertRequest request, int actorUserId, CancellationToken cancellationToken = default);
 

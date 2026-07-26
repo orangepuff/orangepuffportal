@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -6,9 +6,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ConfirmDialog, ConfirmDialogData } from '@orangepuff/portal-frontend-shared';
 import { ConfigAdminService } from '../config-admin.service';
@@ -28,28 +30,52 @@ import { ConfigItemFormDialog, ConfigItemFormDialogData, ConfigItemFormDialogRes
     MatInputModule,
     MatSelectModule,
     MatPaginatorModule,
+    MatProgressBarModule,
+    MatSortModule,
     MatTabsModule
   ],
   templateUrl: './config-admin-page.html',
   styleUrl: './config-admin-page.scss'
 })
-export class ConfigAdminPage implements OnInit {
+export class ConfigAdminPage implements OnInit, AfterViewInit {
   private readonly configAdminService = inject(ConfigAdminService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
+  @ViewChild('sectionSort') private sectionSort!: MatSort;
+
   protected readonly sections = signal<ConfigSection[]>([]);
+  // Sections are unpaged (small, hand-curated list) — sorted entirely client-side via
+  // MatTableDataSource, unlike the Configs table below which sorts server-side.
+  protected readonly sectionsDataSource = new MatTableDataSource<ConfigSection>([]);
   protected readonly sectionColumns = ['sModule', 'sSectionDesc', 'sTextCode', 'btShow', 'actions'];
 
   protected readonly items = signal<ConfigItemRow[]>([]);
   protected readonly totalCount = signal(0);
-  protected readonly itemColumns = ['sSectionDesc', 'sConfigCode', 'sConfigName', 'iConfigType', 'btShow', 'btAllowUserEdit', 'actions'];
+  protected readonly itemsLoading = signal(false);
+  protected readonly itemColumns = [
+    'sSectionDesc',
+    'sConfigCode',
+    'sConfigName',
+    'iConfigType',
+    'btShow',
+    'btAllowUserEdit',
+    'iSortOrder',
+    'defaultValue',
+    'actions'
+  ];
   protected readonly pageSizeOptions = [50, 100, 200, 500];
   protected readonly configValueTypes = CONFIG_VALUE_TYPES;
 
   private page = 1;
   private pageSize = 50;
   private appliedFilter: ConfigItemFilter = {};
+  private sortBy: string | null = null;
+  private sortDescending = false;
+  // Bumped on every reloadItems() call so a late-arriving response from a superseded request
+  // (e.g. the user clicks a sort header twice in quick succession) can be told apart from the
+  // response to the most recent request and dropped instead of overwriting it out of order.
+  private itemsRequestId = 0;
 
   protected readonly filterForm = new FormGroup({
     sectionId: new FormControl<number | null>(null),
@@ -62,18 +88,62 @@ export class ConfigAdminPage implements OnInit {
     this.reloadItems();
   }
 
+  ngAfterViewInit(): void {
+    this.sectionsDataSource.sort = this.sectionSort;
+  }
+
   protected configTypeName(item: ConfigItemRow): string {
     return this.configValueTypes.find((t) => t.value === item.iConfigType)?.name ?? `#${item.iConfigType}`;
   }
 
+  protected defaultValueDisplay(item: ConfigItemRow): string {
+    switch (item.iConfigType) {
+      case 0:
+        return item.sDefaultValue ?? '—';
+      case 1:
+        return item.iDefaultValue !== null ? String(item.iDefaultValue) : '—';
+      case 2:
+        return item.nDefaultValue !== null ? String(item.nDefaultValue) : '—';
+      case 3:
+        return item.btDefaultValue !== null ? (item.btDefaultValue ? 'Yes' : 'No') : '—';
+      default:
+        return '—';
+    }
+  }
+
+  protected onSortChange(sort: Sort): void {
+    this.sortBy = sort.direction ? sort.active : null;
+    this.sortDescending = sort.direction === 'desc';
+    this.page = 1;
+    this.reloadItems();
+  }
+
   private reloadSections(): void {
-    this.configAdminService.listSections().subscribe((sections) => this.sections.set(sections));
+    this.configAdminService.listSections().subscribe((sections) => {
+      this.sections.set(sections);
+      this.sectionsDataSource.data = sections;
+    });
   }
 
   private reloadItems(): void {
-    this.configAdminService.listConfigs(this.appliedFilter, this.page, this.pageSize).subscribe((result) => {
-      this.items.set(result.items);
-      this.totalCount.set(result.totalCount);
+    const requestId = ++this.itemsRequestId;
+    this.itemsLoading.set(true);
+
+    this.configAdminService.listConfigs(this.appliedFilter, this.sortBy, this.sortDescending, this.page, this.pageSize).subscribe({
+      next: (result) => {
+        if (requestId !== this.itemsRequestId) {
+          return; // a newer request has since been issued — this response is stale, drop it
+        }
+
+        this.items.set(result.items);
+        this.totalCount.set(result.totalCount);
+        this.itemsLoading.set(false);
+      },
+      error: () => {
+        if (requestId === this.itemsRequestId) {
+          this.itemsLoading.set(false);
+        }
+      }
     });
   }
 

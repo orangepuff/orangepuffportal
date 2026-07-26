@@ -1,38 +1,68 @@
+// Light green "selected" tab (+ the content panel it merges into) vs. white "unselected" tabs,
+// framed by a visible border on every side — a literal color choice per request, not a theme token
+// (the app's M3 theme is teal, not green, so there's no system token to reuse here).
+$config-admin-tab-border: #d0d0d0;
+$config-admin-tab-inactive-bg: #ffffff;
+$config-admin-tab-active-bg: #e8f5e9;
+
 .config-admin-page {
   padding: 16px;
 
-  // M3 tab tokens only cover label/indicator color, not an active-tab background — Material always
-  // stamps `.mdc-tab--active` on the selected tab regardless of theme, so that part needs a scoped
+  // M3 tab tokens only cover label/indicator color, not backgrounds or borders — Material always
+  // stamps `.mdc-tab--active` on the selected tab regardless of theme, so the rest needs a scoped
   // ::ng-deep touch (tab labels are rendered by MatTabGroup itself, not this component's own
   // template, so plain scoped CSS can't reach them at all).
-  //
-  // Muted "tray" look instead of a loud color block: the tab strip sits on a soft neutral
-  // background, the active tab's own background matches the page background behind it (so it
-  // visually "merges" with the content below, the classic raised-tab look), and only the thin
-  // indicator line + label weight carry the accent color.
   --mat-tab-header-label-text-weight: 600;
-  --mat-tab-header-active-label-text-color: var(--mat-sys-on-surface);
-  --mat-tab-header-active-ripple-color: var(--mat-sys-primary);
-  --mat-tab-header-active-focus-indicator-color: var(--mat-sys-primary);
-  --mat-tab-header-inactive-label-text-color: var(--mat-sys-on-surface-variant);
-  --mdc-tab-indicator-active-indicator-color: var(--mat-sys-primary);
+  --mat-tab-header-active-label-text-color: #1b1b1b;
+  --mat-tab-header-active-ripple-color: #1b1b1b;
+  --mat-tab-header-active-focus-indicator-color: #1b1b1b;
+  --mat-tab-header-inactive-label-text-color: #4a4a4a;
 
   ::ng-deep {
     .mat-mdc-tab-header {
-      background-color: var(--mat-sys-surface-container);
-      border-radius: 8px 8px 0 0;
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      border: 1px solid $config-admin-tab-border;
+      border-bottom: none;
+    }
+
+    .mat-mdc-tab-labels {
+      width: 100%;
+    }
+
+    .mdc-tab {
+      flex: 1 1 0;
+      background-color: $config-admin-tab-inactive-bg;
+      border-right: 1px solid $config-admin-tab-border;
+
+      &:last-of-type {
+        border-right: none;
+      }
     }
 
     .mdc-tab--active {
-      background-color: var(--mat-sys-surface);
-      border-radius: 8px 8px 0 0;
+      background-color: $config-admin-tab-active-bg;
+    }
+
+    // The colored underline would be redundant with the background swap above and isn't in the
+    // requested look — the border + background contrast alone marks the active tab.
+    .mdc-tab-indicator {
+      display: none;
+    }
+
+    // Below ~600px, Material's own horizontal-scroll/pagination-arrow behavior for overflowing tabs
+    // needs the tabs to be allowed to shrink to their content width instead of stretching to fill —
+    // otherwise four equal-width flex tabs just squeeze their labels instead of scrolling.
+    @media (max-width: 599px) {
+      .mdc-tab {
+        flex: 0 0 auto;
+      }
     }
   }
 }
 
 .config-admin-page__tab {
-  padding: 16px 0;
+  padding: 16px;
+  border: 1px solid $config-admin-tab-border;
+  background-color: $config-admin-tab-active-bg;
 }
 
 .config-admin-page__toolbar {
@@ -50,6 +80,13 @@
   margin-bottom: 16px;
 }
 
+.config-admin-page__loading-bar {
+  // Reserves the bar's height whether or not it's showing, so the table underneath doesn't jump up
+  // and down every time a load starts/finishes.
+  height: 4px;
+  margin-bottom: 12px;
+}
+
 .config-admin-page__table {
   width: 100%;
 
@@ -59,5 +96,17 @@
 
   .mat-mdc-row:hover {
     background-color: var(--mat-sys-surface-container-high);
+  }
+}
+
+.config-admin-page__bool-icon {
+  vertical-align: middle;
+
+  &--yes {
+    color: #2e7d32;
+  }
+
+  &--no {
+    color: #c62828;
   }
 }
