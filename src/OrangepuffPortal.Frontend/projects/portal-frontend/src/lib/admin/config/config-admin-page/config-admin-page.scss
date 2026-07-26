@@ -1,5 +1,34 @@
 .config-admin-page {
   padding: 16px;
+
+  // M3 tab tokens only cover label/indicator color, not an active-tab background — Material always
+  // stamps `.mdc-tab--active` on the selected tab regardless of theme, so that part needs a scoped
+  // ::ng-deep touch (tab labels are rendered by MatTabGroup itself, not this component's own
+  // template, so plain scoped CSS can't reach them at all).
+  //
+  // Muted "tray" look instead of a loud color block: the tab strip sits on a soft neutral
+  // background, the active tab's own background matches the page background behind it (so it
+  // visually "merges" with the content below, the classic raised-tab look), and only the thin
+  // indicator line + label weight carry the accent color.
+  --mat-tab-header-label-text-weight: 600;
+  --mat-tab-header-active-label-text-color: var(--mat-sys-on-surface);
+  --mat-tab-header-active-ripple-color: var(--mat-sys-primary);
+  --mat-tab-header-active-focus-indicator-color: var(--mat-sys-primary);
+  --mat-tab-header-inactive-label-text-color: var(--mat-sys-on-surface-variant);
+  --mdc-tab-indicator-active-indicator-color: var(--mat-sys-primary);
+
+  ::ng-deep {
+    .mat-mdc-tab-header {
+      background-color: var(--mat-sys-surface-container);
+      border-radius: 8px 8px 0 0;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+    }
+
+    .mdc-tab--active {
+      background-color: var(--mat-sys-surface);
+      border-radius: 8px 8px 0 0;
+    }
+  }
 }
 
 .config-admin-page__tab {
@@ -23,4 +52,12 @@
 
 .config-admin-page__table {
   width: 100%;
+
+  .mat-mdc-row:nth-child(even) {
+    background-color: var(--mat-sys-surface-container-low);
+  }
+
+  .mat-mdc-row:hover {
+    background-color: var(--mat-sys-surface-container-high);
+  }
 }

@@ -34,6 +34,20 @@ internal class ConfigTextAdminService(IConfigTextRepository repository, ConfigTe
         var utcNow = DateTime.UtcNow;
         var entry = new ConfigTextDefinition(request.SModule, request.STextCode, request.SCultureCode, request.STextType, request.SText, request.SNote, utcNow, actorUserId);
         await repository.AddAsync(entry, cancellationToken);
+
+        // Mirrors ConfigTextWriter's seeding contract: every real culture is expected to have a "*"
+        // fallback row alongside it. An admin adding e.g. "en-US" straight from the grid (rather than
+        // through a module's seed file) would otherwise silently skip that fallback, so backfill it
+        // here — but only if it's not already there, and never touch it if it is.
+        if (request.SCultureCode != ConfigTextDefinition.WildcardCulture &&
+            !await repository.ExistsAsync(request.SModule, request.STextCode, ConfigTextDefinition.WildcardCulture, request.STextType, null, cancellationToken))
+        {
+            var wildcardEntry = new ConfigTextDefinition(
+                request.SModule, request.STextCode, ConfigTextDefinition.WildcardCulture, request.STextType, request.SText, request.SNote, utcNow, actorUserId);
+            await repository.AddAsync(wildcardEntry, cancellationToken);
+            logger.LogInformation("{LogPrefix}: also created missing fallback row for {Module}/{TextCode}/{TextType}", LogPrefix, request.SModule, request.STextCode, request.STextType);
+        }
+
         await repository.SaveChangesAsync(cancellationToken);
         cache.Invalidate();
 
