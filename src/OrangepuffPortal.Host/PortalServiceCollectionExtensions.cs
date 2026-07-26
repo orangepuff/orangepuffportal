@@ -1,5 +1,6 @@
 using Diagnostics.Abstractions.Interfaces;
 using Diagnostics.NLog.Transactions;
+using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OrangepuffPortal.Bff;
@@ -32,6 +33,13 @@ namespace OrangepuffPortal.Host
             services.AddConfigTextModule(configuration);
             services.AddConfigModule(configuration);
             services.AddPortalBff(configuration);
+
+            // Registered once, here, for every module's assembly together — Identity publishes
+            // UserCreatedNotification (OrangepuffPortal.Shared.Events) and Config subscribes to it, so a
+            // single IMediator instance has to know about both assemblies' handlers.
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
+                typeof(OrangepuffPortal.Identity.Infrastructure.ModuleRegistration).Assembly,
+                typeof(OrangepuffPortal.Config.Infrastructure.ModuleRegistration).Assembly));
 
             return services;
         }

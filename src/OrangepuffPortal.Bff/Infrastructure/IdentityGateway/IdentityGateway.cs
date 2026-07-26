@@ -90,9 +90,9 @@ namespace OrangepuffPortal.Bff.Infrastructure.IdentityGateway
         public Task<IReadOnlyList<SecurityRuleItemListItemDto>> ListSecurityRuleItemsAsync(int? categoryId, CancellationToken ct = default) =>
             mediator.Send(new ListSecurityRuleItemsQuery(categoryId), ct);
 
-        public async Task<AddUserResult> AddUserAsync(string username, string? email, string? displayName, int? templateUserId, string? password, CancellationToken ct = default)
+        public async Task<AddUserResult> AddUserAsync(string username, string? email, string? displayName, int? templateUserId, string? password, int actorUserId, CancellationToken ct = default)
         {
-            var result = await mediator.Send(new AddUserCommand(username, email, displayName, templateUserId, password), ct);
+            var result = await mediator.Send(new AddUserCommand(username, email, displayName, templateUserId, password, actorUserId), ct);
             return new AddUserResult(result.Success, result.UserId, result.RejectionReason);
         }
 

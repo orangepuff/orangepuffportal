@@ -20,6 +20,11 @@ public class ConfigItem
     public bool Show { get; private set; } = true;
     public bool AllowUserEdit { get; private set; }
     public int? SortOrder { get; private set; }
+    /// <summary>Exactly one of these four should be set, matching <see cref="ConfigType"/> — mirrors <c>ConfigUser</c>'s four value columns. Absence means no default is configured.</summary>
+    public string? DefaultStringValue { get; private set; }
+    public int? DefaultIntValue { get; private set; }
+    public decimal? DefaultDecimalValue { get; private set; }
+    public bool? DefaultBoolValue { get; private set; }
     public int? InsertedUserId { get; private set; }
     public DateTime? InsertedTime { get; private set; }
     public int? UpdatedUserId { get; private set; }
@@ -27,7 +32,9 @@ public class ConfigItem
 
     private ConfigItem() { } // EF
 
-    public ConfigItem(int sectionId, string configCode, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow, int? sortOrder = null)
+    public ConfigItem(
+        int sectionId, string configCode, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow,
+        int? sortOrder = null, string? defaultStringValue = null, int? defaultIntValue = null, decimal? defaultDecimalValue = null, bool? defaultBoolValue = null)
     {
         if (string.IsNullOrWhiteSpace(configCode))
         {
@@ -52,11 +59,21 @@ public class ConfigItem
         Show = show;
         AllowUserEdit = allowUserEdit;
         SortOrder = sortOrder;
+        DefaultStringValue = defaultStringValue;
+        DefaultIntValue = defaultIntValue;
+        DefaultDecimalValue = defaultDecimalValue;
+        DefaultBoolValue = defaultBoolValue;
         InsertedTime = utcNow;
     }
 
+    /// <summary>Has any default value field been set — used to decide whether a newly-created config needs backfilling onto existing users.</summary>
+    public bool HasDefaultValue =>
+        DefaultStringValue is not null || DefaultIntValue is not null || DefaultDecimalValue is not null || DefaultBoolValue is not null;
+
     /// <summary>Overwrite an already-seeded config (only reached when the seed entry sets btReplace) — including moving it to a different section.</summary>
-    public void Replace(int sectionId, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow, int? sortOrder = null)
+    public void Replace(
+        int sectionId, string configName, string textCode, int configType, bool show, bool allowUserEdit, DateTime utcNow,
+        int? sortOrder = null, string? defaultStringValue = null, int? defaultIntValue = null, decimal? defaultDecimalValue = null, bool? defaultBoolValue = null)
     {
         SectionId = sectionId;
         ConfigName = configName.Trim();
@@ -65,6 +82,10 @@ public class ConfigItem
         Show = show;
         AllowUserEdit = allowUserEdit;
         SortOrder = sortOrder;
+        DefaultStringValue = defaultStringValue;
+        DefaultIntValue = defaultIntValue;
+        DefaultDecimalValue = defaultDecimalValue;
+        DefaultBoolValue = defaultBoolValue;
         UpdatedTime = utcNow;
     }
 }

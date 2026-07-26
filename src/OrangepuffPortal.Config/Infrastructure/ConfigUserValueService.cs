@@ -78,6 +78,30 @@ internal class ConfigUserValueService(IConfigRepository repository, ICurrentUser
         await repository.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task ApplyDefaultsForNewUserAsync(int userId, int actorUserId, CancellationToken cancellationToken = default)
+    {
+        var utcNow = DateTime.UtcNow;
+        var configsWithDefault = await repository.ListConfigsWithDefaultAsync(cancellationToken);
+
+        var applied = 0;
+        foreach (var config in configsWithDefault)
+        {
+            if (await repository.FindUserValueAsync(userId, config.Id, cancellationToken) is not null)
+            {
+                continue;
+            }
+
+            var created = new ConfigUser(userId, config.Id, config.DefaultStringValue, config.DefaultIntValue, config.DefaultDecimalValue, config.DefaultBoolValue, actorUserId, utcNow);
+            await repository.AddUserValueAsync(created, cancellationToken);
+            applied++;
+        }
+
+        if (applied > 0)
+        {
+            await repository.SaveChangesAsync(cancellationToken);
+        }
+    }
+
     private async Task<ConfigItem> GetConfigOrThrowAsync(string configCode, CancellationToken cancellationToken) =>
         await repository.FindConfigByCodeAsync(configCode, cancellationToken)
             ?? throw new InvalidOperationException($"Config '{configCode}' does not exist.");

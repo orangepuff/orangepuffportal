@@ -13,6 +13,9 @@ public interface IConfigRepository
 
     Task AddConfigAsync(ConfigItem config, CancellationToken cancellationToken = default);
 
+    /// <summary>Every config that has at least one default value field set — used to apply defaults onto a newly-created user.</summary>
+    Task<IReadOnlyList<ConfigItem>> ListConfigsWithDefaultAsync(CancellationToken cancellationToken = default);
+
     // Values
     Task<ConfigUser?> FindUserValueAsync(int userId, int configId, CancellationToken cancellationToken = default);
 
@@ -22,6 +25,9 @@ public interface IConfigRepository
     Task<IReadOnlyList<(ConfigSection Section, ConfigItem Item, ConfigUser? Value)>> ListVisibleCatalogWithUserValuesAsync(int userId, CancellationToken cancellationToken = default);
 
     Task AddUserValueAsync(ConfigUser configUser, CancellationToken cancellationToken = default);
+
+    /// <summary>Bulk insert — used to backfill a brand-new config's default onto every existing user in one go.</summary>
+    Task AddUserValuesAsync(IReadOnlyCollection<ConfigUser> configUsers, CancellationToken cancellationToken = default);
 
     Task AddUserValueHistoryAsync(ConfigUserHistory history, CancellationToken cancellationToken = default);
 

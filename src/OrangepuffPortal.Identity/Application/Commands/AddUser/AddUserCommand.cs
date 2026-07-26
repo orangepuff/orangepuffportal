@@ -8,5 +8,6 @@ namespace OrangepuffPortal.Identity.Application.Commands.AddUser
     /// <paramref name="Password"/> is optional — a user created without one can still sign in via
     /// Google (or have a password set for them later via SetUserPasswordCommand).
     /// </summary>
-    public record AddUserCommand(string Username, string? Email, string? DisplayName, int? TemplateUserId, string? Password) : IRequest<AddUserResult>;
+    /// <param name="ActorUserId">The acting admin's id — attributed on the UserCreatedNotification this publishes.</param>
+    public record AddUserCommand(string Username, string? Email, string? DisplayName, int? TemplateUserId, string? Password, int ActorUserId) : IRequest<AddUserResult>;
 }

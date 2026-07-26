@@ -18,6 +18,11 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
     public async Task AddConfigAsync(ConfigItem config, CancellationToken cancellationToken = default) =>
         await db.Configs.AddAsync(config, cancellationToken);
 
+    public async Task<IReadOnlyList<ConfigItem>> ListConfigsWithDefaultAsync(CancellationToken cancellationToken = default) =>
+        await db.Configs.AsNoTracking()
+            .Where(x => x.DefaultStringValue != null || x.DefaultIntValue != null || x.DefaultDecimalValue != null || x.DefaultBoolValue != null)
+            .ToListAsync(cancellationToken);
+
     public Task<ConfigUser?> FindUserValueAsync(int userId, int configId, CancellationToken cancellationToken = default) =>
         db.ConfigUsers.FirstOrDefaultAsync(x => x.UserId == userId && x.ConfigId == configId, cancellationToken);
 
@@ -40,6 +45,9 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
 
     public async Task AddUserValueAsync(ConfigUser configUser, CancellationToken cancellationToken = default) =>
         await db.ConfigUsers.AddAsync(configUser, cancellationToken);
+
+    public async Task AddUserValuesAsync(IReadOnlyCollection<ConfigUser> configUsers, CancellationToken cancellationToken = default) =>
+        await db.ConfigUsers.AddRangeAsync(configUsers, cancellationToken);
 
     public async Task AddUserValueHistoryAsync(ConfigUserHistory history, CancellationToken cancellationToken = default) =>
         await db.ConfigUsersHistory.AddAsync(history, cancellationToken);

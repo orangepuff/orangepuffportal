@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using OrangepuffPortal.Identity.Domain.Entity;
 using OrangepuffPortal.Identity.Domain.Repositories;
+using OrangepuffPortal.Shared.Events;
 
 namespace OrangepuffPortal.Identity.Application.Commands.AddUser
 {
     public class AddUserCommandHandler(
         IUserRepository repository
         , IPasswordHasher<User> passwordHasher
+        , IPublisher publisher
         , ITransactionLogger transactionLogger
         , ILogger<AddUserCommandHandler> logger) : IRequestHandler<AddUserCommand, AddUserResult>
     {
@@ -68,6 +70,11 @@ namespace OrangepuffPortal.Identity.Application.Commands.AddUser
 
             transaction.SetUser(newUser.Id.ToString());
             logger.LogInformation("{LogPrefix}: created user {UserId}", LogPrefix, newUser.Id);
+
+            // The notification handler (Config module) swallows its own exceptions — a hiccup applying
+            // config defaults must never fail this request, since the user was already created successfully.
+            await publisher.Publish(new UserCreatedNotification(newUser.Id, request.ActorUserId), cancellationToken);
+
             return AddUserResult.Created(newUser.Id);
         }
     }

@@ -48,6 +48,10 @@ config.Configs
                                                   -- not by IConfigUserValueService itself
   iSortOrder       INT                NULL       -- display order within its section; null sorts after
                                                   -- any ordered configs, by iId
+  sDefaultValue    NVARCHAR(255)      NULL       -- exactly one of these four should be set, matching
+  iDefaultValue    INT                NULL       -- iConfigType — see "Default values" below. Absence
+  nDefaultValue    DECIMAL(8,3)       NULL       -- means no default is configured for this config.
+  btDefaultValue   BIT                NULL
   iInsertedUserId  INT                NULL
   dtInsertedTime   DATETIME           NULL
   iUpdatedUserId   INT                NULL
@@ -113,6 +117,7 @@ public sealed record ConfigSeedEntry(
     bool BtShow = true,
     bool BtAllowUserEdit = false,
     int? ISortOrder = null,
+    ConfigValueInput? DefaultValue = null,
     bool BtReplace = false);
 
 public sealed record ConfigSectionSeedEntry(
@@ -183,7 +188,8 @@ the text code hasn't been seeded into `ConfigTextDefinition` yet.
 
 `OrangepuffPortal.Bff` exposes this module through `IConfigGateway`/`ConfigGateway`
 (`Infrastructure/ConfigGateway/`) — a thin in-process wrapper over `IConfigUserValueService`, same shape as
-`IIdentityGateway` but calling the module's plain service directly (Config has no MediatR handlers):
+`IIdentityGateway` but calling the module's plain service directly (Config has no MediatR *commands/queries*
+of its own — it does have one MediatR *notification handler*, see "Default values" below):
 
 - `GET /bff/users/{userId}/config` — self-or-admin only (manual check inside the endpoint: the caller must
   be the target user or hold the `AdminOnly` claim). Returns `GetSectionsForUserAsync(userId)`. Any signed
@@ -194,12 +200,45 @@ the text code hasn't been seeded into `ConfigTextDefinition` yet.
   self-service write endpoint, not built yet since the current settings UI is admin-write / user-read-only
   by design).
 
+## Default values
+
+`Configs` carries an optional default (`sDefaultValue`/`iDefaultValue`/`nDefaultValue`/`btDefaultValue`,
+exactly one set matching `iConfigType`, checked via `ConfigItem.HasDefaultValue`). Two things apply it,
+both only the *first* time a given (config, user) pair comes into existence — neither ever overwrites an
+already-set `ConfigUsers` value:
+
+1. **New config, existing users** — when `ConfigCatalogWriter.UpsertAsync` *creates* a config (not a
+   `BtReplace` update of one already there) with a default set, it backfills that default onto every id in
+   the `existingUserIds` list the caller passed in (Config has no way to enumerate users itself — the
+   consuming app's own startup code fetches ids from Identity and passes them through). Re-seeding an
+   existing config with a changed default (`BtReplace`) only updates the stored default for *future* new
+   users/configs — it never retroactively touches anyone's existing value.
+2. **New user, existing configs** — Identity's `AddUserCommandHandler` and `ProvisionGoogleUserCommandHandler`
+   (Google self-registration) both publish a `UserCreatedNotification(UserId, ActorUserId)` (MediatR, defined
+   in `OrangepuffPortal.Shared.Events` since Identity and Config don't otherwise reference each other) after
+   creating a user. Config's `ApplyConfigDefaultsOnUserCreatedHandler` reacts by calling
+   `IConfigUserValueService.ApplyDefaultsForNewUserAsync(userId, actorUserId)`, which inserts a `ConfigUsers`
+   row for every config that has a default configured. The handler swallows any exception (logs, doesn't
+   rethrow) — applying defaults can never fail the user-creation request that triggered it.
+
+Both paths write with a real actor when one exists, `0` otherwise. `identity.Users.iId` is an `IDENTITY`
+starting at 1, so `0` can never collide with a real user — it marks a `ConfigUsers` row as system-applied
+rather than deliberately set by anyone:
+- Admin-added user (`AddUserCommand`): the acting admin's id.
+- Google self-registration (`ProvisionGoogleUserCommand`): `0` — no admin performed this.
+- Startup-seed backfill onto existing users: `0` — unattended startup code has no signed-in user
+  (`ICurrentUser` would throw outside a real request).
+
+No `ConfigUsersHistory` row is written for either path — both only ever *insert* a brand-new `ConfigUsers`
+row (guarded by an idempotency check against an existing row for path 2), and there's nothing to snapshot
+on a first-ever insert, matching `SetValueAsync`'s existing rule.
+
 ## What's out of scope for now
 
 - No self-service (non-admin) config write endpoint — `btAllowUserEdit` is populated by seed data but not
   yet consulted by any caller; the current Settings UI only lets an admin edit values, any user (including
   the owner) only ever reads their own. Add a `PUT /bff/me/config/{configCode}` gated on
   `btAllowUserEdit` if/when self-service editing is actually needed.
-- No default-value column on `Configs` (see above).
-- No `CHECK` constraint enforcing "only the column matching `iConfigType` is non-null" on `ConfigUsers`/
-  `ConfigUsersHistory` — enforced by `ConfigUserValueService` only, at the application layer.
+- No `CHECK` constraint enforcing "only the column matching `iConfigType` is non-null" on `Configs`'
+  default columns, or on `ConfigUsers`/`ConfigUsersHistory` — enforced by `ConfigCatalogWriter`/
+  `ConfigUserValueService` only, at the application layer.

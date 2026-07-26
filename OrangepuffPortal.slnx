@@ -21,5 +21,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/unit/OrangepuffPortal.Identity.UnitTests/OrangepuffPortal.Identity.UnitTests.csproj" />
+    <Project Path="tests/unit/OrangepuffPortal.Config.UnitTests/OrangepuffPortal.Config.UnitTests.csproj" />
   </Folder>
 </Solution>

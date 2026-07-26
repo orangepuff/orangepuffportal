@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MediatR" />
     <PackageReference Include="Orangepuff.Diagnostics.Abstractions" />
     <PackageReference Include="Orangepuff.Diagnostics.NLog" />
   </ItemGroup>

@@ -12,8 +12,15 @@ public interface IConfigCatalogWriter
     /// present (matched by module + STextCode) is left untouched unless it sets BtReplace; same for
     /// each config within it (matched by SConfigCode alone, globally).
     /// </summary>
+    /// <param name="existingUserIds">
+    /// Every user id that already exists, so a brand-new config's DefaultValue (if any) can be backfilled
+    /// onto them — Config has no way to enumerate users itself, so the caller (a consuming app's own
+    /// startup code, which does have access to Identity) supplies this. Ignored for configs that already
+    /// existed before this call (a BtReplace re-seed never retroactively backfills anyone).
+    /// </param>
     Task UpsertAsync(
         string module,
         IReadOnlyCollection<ConfigSectionSeedEntry> sections,
+        IReadOnlyList<int>? existingUserIds = null,
         CancellationToken cancellationToken = default);
 }

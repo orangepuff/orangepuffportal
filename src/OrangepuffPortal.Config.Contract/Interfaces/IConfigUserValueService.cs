@@ -23,4 +23,12 @@ public interface IConfigUserValueService
     /// Configs.BtAllowUserEdit — that is the caller's responsibility.
     /// </summary>
     Task SetValueAsync(int userId, string configCode, ConfigValueInput value, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Inserts a ConfigUsers row for every config that has a default configured, for a newly-created
+    /// user — skips any config the user already has a value for (idempotency; this can in principle run
+    /// more than once for the same user). Never overwrites an existing value, and never writes history
+    /// (nothing to snapshot on a first-ever insert).
+    /// </summary>
+    Task ApplyDefaultsForNewUserAsync(int userId, int actorUserId, CancellationToken cancellationToken = default);
 }
