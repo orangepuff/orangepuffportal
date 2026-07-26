@@ -39,15 +39,12 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let user">
-        <button mat-icon-button type="button" (click)="openEditDialog(user)" aria-label="Edit">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button type="button" (click)="openSetPasswordDialog(user)" aria-label="Set password">
-          <mat-icon>key</mat-icon>
-        </button>
         <a mat-icon-button [routerLink]="['/Users', user.id, 'Settings']" aria-label="Manage settings">
           <mat-icon>tune</mat-icon>
         </a>
+        <button mat-icon-button type="button" (click)="openSetPasswordDialog(user)" aria-label="Set password">
+          <mat-icon>key</mat-icon>
+        </button>
         <button mat-icon-button type="button" (click)="deleteUser(user)" aria-label="Delete">
           <mat-icon>delete</mat-icon>
         </button>

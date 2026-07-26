@@ -8,14 +8,17 @@ import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Avatar, IdentityService } from '@orangepuff/portal-frontend-shared';
 import { UserSettingsService } from './user-settings.service';
 import { ConfigSettingsService, ConfigValueInput, ConfigValueType, UserConfigItem, UserConfigSection } from './config-settings.service';
+import { UserAdminService } from '../admin/users/user-admin.service';
+import { User } from '../admin/users/user';
 
 @Component({
   selector: 'lib-portal-settings-page',
-  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, ReactiveFormsModule],
+  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss'
 })
@@ -26,6 +29,7 @@ export class SettingsPage {
   protected readonly identityService = inject(IdentityService);
   private readonly userSettingsService = inject(UserSettingsService);
   private readonly configSettingsService = inject(ConfigSettingsService);
+  private readonly userAdminService = inject(UserAdminService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly avatarVersion = signal(0);
@@ -51,6 +55,18 @@ export class SettingsPage {
   );
 
   private readonly configControls = new Map<string, FormControl>();
+
+  /** The target user's own record and the pool of template users, both admin-only — loaded from the same GET /bff/admin/users the User List uses. */
+  protected readonly targetUser = signal<User | null>(null);
+  protected readonly templateUsers = signal<User[]>([]);
+
+  protected readonly accountForm = new FormGroup({
+    email: new FormControl(''),
+    displayName: new FormControl(''),
+    isActive: new FormControl(true, { nonNullable: true }),
+    isTemplateUser: new FormControl(false, { nonNullable: true }),
+    parentId: new FormControl<number | null>(null)
+  });
 
   protected readonly displayNameForm = new FormGroup({
     displayName: new FormControl(this.identityService.currentUser()?.displayName ?? '', { nonNullable: true, validators: [Validators.required] })
@@ -78,6 +94,31 @@ export class SettingsPage {
           this.configControls.set(item.sConfigCode, control);
         }
       }
+    });
+
+    // Account section (username/email/display name/active/template) is admin-only, for any target user — reload the same list the User List uses whenever the target user changes.
+    effect(() => {
+      const userId = this.targetUserId();
+      if (!this.isAdmin() || !userId) {
+        return;
+      }
+
+      this.userAdminService.list().subscribe((users) => {
+        this.templateUsers.set(users.filter((u) => u.isTemplateUser));
+
+        const target = users.find((u) => u.id === Number(userId)) ?? null;
+        this.targetUser.set(target);
+
+        if (target) {
+          this.accountForm.reset({
+            email: target.email ?? '',
+            displayName: target.displayName ?? '',
+            isActive: target.isActive,
+            isTemplateUser: target.isTemplateUser,
+            parentId: target.parentId
+          });
+        }
+      });
     });
   }
 
@@ -124,6 +165,31 @@ export class SettingsPage {
         this.snackBar.open(`Could not update avatar: ${result.rejectionReason}`, 'Dismiss');
       }
     });
+  }
+
+  protected saveAccount(): void {
+    if (this.accountForm.invalid) {
+      return;
+    }
+
+    const value = this.accountForm.getRawValue();
+    const userId = Number(this.targetUserId());
+
+    this.userAdminService
+      .update(userId, {
+        email: value.email || null,
+        displayName: value.displayName || null,
+        isActive: value.isActive,
+        isTemplateUser: value.isTemplateUser,
+        parentId: value.isTemplateUser ? null : value.parentId
+      })
+      .subscribe((result) => {
+        if (result.success) {
+          this.snackBar.open('Account updated', 'Dismiss');
+        } else {
+          this.snackBar.open(`Could not update account: ${result.rejectionReason}`, 'Dismiss');
+        }
+      });
   }
 
   protected saveDisplayName(): void {

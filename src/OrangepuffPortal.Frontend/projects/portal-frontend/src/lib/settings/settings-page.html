@@ -23,6 +23,53 @@
     </mat-card-content>
   </mat-card>
 
+  @if (isAdmin() && targetUser(); as user) {
+    <mat-card class="settings-page__card">
+      <mat-card-header>
+        <mat-card-title>Account</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="accountForm" (ngSubmit)="saveAccount()">
+          <div class="settings-page__form-row">
+            <mat-form-field appearance="outline" class="settings-page__field">
+              <mat-label>Username</mat-label>
+              <input matInput [value]="user.username" disabled />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="settings-page__field">
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="settings-page__field">
+              <mat-label>Display name</mat-label>
+              <input matInput formControlName="displayName" />
+            </mat-form-field>
+          </div>
+
+          <div class="settings-page__form-row">
+            <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+            <mat-checkbox formControlName="isTemplateUser">Usable as a permission template</mat-checkbox>
+          </div>
+
+          @if (!accountForm.controls.isTemplateUser.value) {
+            <mat-form-field appearance="outline" class="settings-page__field">
+              <mat-label>Inherit permissions from template</mat-label>
+              <mat-select formControlName="parentId">
+                <mat-option [value]="null">(none — independent user)</mat-option>
+                @for (templateUser of templateUsers(); track templateUser.id) {
+                  @if (templateUser.id !== user.id) {
+                    <mat-option [value]="templateUser.id">{{ templateUser.username }}</mat-option>
+                  }
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+
+          <button mat-flat-button type="submit" [disabled]="accountForm.invalid">Save account</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+
   @if (isOwnSettings()) {
     <mat-card class="settings-page__card">
       <mat-card-header>

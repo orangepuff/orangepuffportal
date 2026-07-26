@@ -44,7 +44,7 @@ export class UserList implements OnInit {
   }
 
   protected openAddDialog(): void {
-    const data: UserFormDialogData = { user: null, templateUsers: this.users().filter((u) => u.isTemplateUser) };
+    const data: UserFormDialogData = { templateUsers: this.users().filter((u) => u.isTemplateUser) };
 
     this.dialog
       .open<UserFormDialog, UserFormDialogData, UserFormDialogResult>(UserFormDialog, { data })
@@ -67,35 +67,6 @@ export class UserList implements OnInit {
               this.reload();
             } else {
               this.snackBar.open(`Could not add user: ${res.rejectionReason}`, 'Dismiss');
-            }
-          });
-      });
-  }
-
-  protected openEditDialog(user: User): void {
-    const data: UserFormDialogData = { user, templateUsers: this.users().filter((u) => u.isTemplateUser) };
-
-    this.dialog
-      .open<UserFormDialog, UserFormDialogData, UserFormDialogResult>(UserFormDialog, { data })
-      .afterClosed()
-      .subscribe((result) => {
-        if (!result) {
-          return;
-        }
-
-        this.userAdminService
-          .update(user.id, {
-            email: result.email,
-            displayName: result.displayName,
-            isActive: result.isActive,
-            isTemplateUser: result.isTemplateUser,
-            parentId: result.parentId
-          })
-          .subscribe((res) => {
-            if (res.success) {
-              this.reload();
-            } else {
-              this.snackBar.open(`Could not update user: ${res.rejectionReason}`, 'Dismiss');
             }
           });
       });

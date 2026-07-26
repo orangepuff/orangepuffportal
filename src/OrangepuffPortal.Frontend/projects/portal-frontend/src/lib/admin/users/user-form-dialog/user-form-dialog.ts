@@ -9,7 +9,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { User } from '../user';
 
 export interface UserFormDialogData {
-  user: User | null;
   templateUsers: User[];
 }
 
@@ -17,12 +16,12 @@ export interface UserFormDialogResult {
   username: string;
   email: string | null;
   displayName: string | null;
-  isActive: boolean;
   isTemplateUser: boolean;
   parentId: number | null;
   password: string | null;
 }
 
+/** Add-user only — editing an existing user's account now lives on its Settings page. */
 @Component({
   selector: 'lib-portal-user-form-dialog',
   imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCheckboxModule, MatSelectModule],
@@ -33,16 +32,12 @@ export class UserFormDialog {
   private readonly dialogRef = inject(MatDialogRef<UserFormDialog, UserFormDialogResult>);
   protected readonly data = inject<UserFormDialogData>(MAT_DIALOG_DATA);
 
-  protected readonly isEdit = this.data.user !== null;
-
   protected readonly form = new FormGroup({
-    username: new FormControl(this.data.user?.username ?? '', { nonNullable: true, validators: [Validators.required] }),
-    email: new FormControl(this.data.user?.email ?? ''),
-    displayName: new FormControl(this.data.user?.displayName ?? ''),
-    isActive: new FormControl(this.data.user?.isActive ?? true, { nonNullable: true }),
-    isTemplateUser: new FormControl(this.data.user?.isTemplateUser ?? false, { nonNullable: true }),
-    parentId: new FormControl<number | null>(this.data.user?.parentId ?? null),
-    // Only asked for on create — existing users get/change a password through the separate "Set password" action.
+    username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    email: new FormControl(''),
+    displayName: new FormControl(''),
+    isTemplateUser: new FormControl(false, { nonNullable: true }),
+    parentId: new FormControl<number | null>(null),
     password: new FormControl('')
   });
 
@@ -56,10 +51,9 @@ export class UserFormDialog {
       username: value.username,
       email: value.email || null,
       displayName: value.displayName || null,
-      isActive: value.isActive,
       isTemplateUser: value.isTemplateUser,
       parentId: value.isTemplateUser ? null : value.parentId,
-      password: this.isEdit ? null : value.password || null
+      password: value.password || null
     });
   }
 
