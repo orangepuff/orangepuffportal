@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +13,7 @@ import { SetPasswordDialog, SetPasswordDialogData } from '../set-password-dialog
 
 @Component({
   selector: 'lib-portal-user-list',
-  imports: [MatTableModule, MatButtonModule, MatIconModule, MatDialogModule],
+  imports: [MatTableModule, MatButtonModule, MatIconModule, MatDialogModule, RouterModule],
   templateUrl: './user-list.html',
   styleUrl: './user-list.scss'
 })

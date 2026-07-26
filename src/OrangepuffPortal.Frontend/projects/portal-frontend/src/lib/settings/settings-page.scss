@@ -1,17 +1,54 @@
 .settings-page {
   padding: 16px;
-  max-width: 480px;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-page__card {
+  width: 100%;
 }
 
 .settings-page__avatar {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top: 16px;
 }
 
 .settings-page__avatar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.settings-page__form-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.settings-page__form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 320px;
+}
+
+.settings-page__field {
+  flex: 1 1 220px;
+}
+
+.settings-page__config-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-page__error {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 8px;
+  font-size: 0.85rem;
 }

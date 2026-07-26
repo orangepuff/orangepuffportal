@@ -6,6 +6,11 @@ interface AvatarMutationResult {
   rejectionReason: string | null;
 }
 
+interface ProfileMutationResult {
+  success: boolean;
+  rejectionReason: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UserSettingsService {
   private readonly http = inject(HttpClient);
@@ -16,5 +21,13 @@ export class UserSettingsService {
       form.append('file', file);
     }
     return this.http.put<AvatarMutationResult>('/bff/me/avatar', form);
+  }
+
+  updateDisplayName(displayName: string) {
+    return this.http.put<ProfileMutationResult>('/bff/me/display-name', { displayName });
+  }
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.http.put<ProfileMutationResult>('/bff/me/password', { currentPassword, newPassword });
   }
 }

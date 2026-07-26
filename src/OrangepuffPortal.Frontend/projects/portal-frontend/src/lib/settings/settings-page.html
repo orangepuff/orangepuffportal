@@ -1,20 +1,104 @@
 <div class="settings-page">
   <h1>Settings</h1>
 
-  <section class="settings-page__avatar">
-    <lib-avatar
-      [userId]="targetUserId()"
-      [displayName]="isOwnSettings() ? (identityService.currentUser()?.displayName ?? null) : null"
-      [size]="96"
-      [version]="avatarVersion()"
-    />
+  <mat-card class="settings-page__card">
+    <mat-card-header>
+      <mat-card-title>Avatar</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="settings-page__avatar">
+      <lib-avatar
+        [userId]="targetUserId()"
+        [displayName]="isOwnSettings() ? (identityService.currentUser()?.displayName ?? null) : null"
+        [size]="96"
+        [version]="avatarVersion()"
+      />
 
-    @if (isOwnSettings()) {
-      <div class="settings-page__avatar-actions">
-        <button mat-flat-button type="button" (click)="fileInput.click()">Upload photo</button>
-        <button mat-button type="button" (click)="removeAvatar()">Remove</button>
-        <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
-      </div>
-    }
-  </section>
+      @if (isOwnSettings()) {
+        <div class="settings-page__avatar-actions">
+          <button mat-flat-button type="button" (click)="fileInput.click()">Upload photo</button>
+          <button mat-button type="button" (click)="removeAvatar()">Remove</button>
+          <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)" />
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  @if (isOwnSettings()) {
+    <mat-card class="settings-page__card">
+      <mat-card-header>
+        <mat-card-title>Profile</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form class="settings-page__form-row" [formGroup]="displayNameForm" (ngSubmit)="saveDisplayName()">
+          <mat-form-field appearance="outline" class="settings-page__field">
+            <mat-label>Display name</mat-label>
+            <input matInput formControlName="displayName" />
+          </mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="displayNameForm.invalid">Save display name</button>
+        </form>
+
+        <form class="settings-page__form-column" [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+          <mat-form-field appearance="outline" class="settings-page__field">
+            <mat-label>Current password</mat-label>
+            <input matInput type="password" formControlName="currentPassword" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="settings-page__field">
+            <mat-label>New password</mat-label>
+            <input matInput type="password" formControlName="newPassword" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="settings-page__field">
+            <mat-label>Confirm new password</mat-label>
+            <input matInput type="password" formControlName="confirmPassword" />
+          </mat-form-field>
+          @if (passwordMismatch()) {
+            <p class="settings-page__error">Passwords do not match.</p>
+          }
+          <button mat-flat-button type="submit" [disabled]="passwordForm.invalid || passwordMismatch()">Change password</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @for (section of sections(); track section.sTextCode) {
+    <mat-card class="settings-page__card">
+      <mat-card-header>
+        <mat-card-title>{{ section.sSectionDesc }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @for (item of section.configs; track item.sConfigCode) {
+          <div class="settings-page__config-row">
+            @switch (item.configType) {
+              @case (ConfigValueType.Boolean) {
+                <mat-checkbox [formControl]="getControl(item.sConfigCode)">{{ item.sConfigName }}</mat-checkbox>
+              }
+              @case (ConfigValueType.Int) {
+                <mat-form-field appearance="outline" class="settings-page__field">
+                  <mat-label>{{ item.sConfigName }}</mat-label>
+                  <input matInput type="number" step="1" [formControl]="getControl(item.sConfigCode)" />
+                </mat-form-field>
+              }
+              @case (ConfigValueType.Decimal) {
+                <mat-form-field appearance="outline" class="settings-page__field">
+                  <mat-label>{{ item.sConfigName }}</mat-label>
+                  <input matInput type="number" step="0.001" [formControl]="getControl(item.sConfigCode)" />
+                </mat-form-field>
+              }
+              @default {
+                <mat-form-field appearance="outline" class="settings-page__field">
+                  <mat-label>{{ item.sConfigName }}</mat-label>
+                  <input matInput [formControl]="getControl(item.sConfigCode)" />
+                </mat-form-field>
+              }
+            }
+
+            @if (isAdmin()) {
+              <button mat-icon-button type="button" (click)="saveConfig(item)" aria-label="Save">
+                <mat-icon>save</mat-icon>
+              </button>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
 </div>

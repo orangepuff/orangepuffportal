@@ -1,22 +1,32 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs';
+import { of, switchMap, map } from 'rxjs';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Avatar, IdentityService } from '@orangepuff/portal-frontend-shared';
 import { UserSettingsService } from './user-settings.service';
+import { ConfigSettingsService, ConfigValueInput, ConfigValueType, UserConfigItem, UserConfigSection } from './config-settings.service';
 
 @Component({
   selector: 'lib-portal-settings-page',
-  imports: [Avatar, MatButtonModule],
+  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatIconModule, MatInputModule, ReactiveFormsModule],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss'
 })
 export class SettingsPage {
+  protected readonly ConfigValueType = ConfigValueType;
+
   private readonly route = inject(ActivatedRoute);
   protected readonly identityService = inject(IdentityService);
   private readonly userSettingsService = inject(UserSettingsService);
+  private readonly configSettingsService = inject(ConfigSettingsService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly avatarVersion = signal(0);
@@ -27,8 +37,64 @@ export class SettingsPage {
     { initialValue: this.route.snapshot.paramMap.get('userId') ?? '' }
   );
 
-  /** Avatar upload/remove only exist for the signed-in user's own page — there's no Bff endpoint for an admin to mutate someone else's avatar. */
+  /** Avatar upload/remove and the profile (display name/password) forms only exist for the signed-in user's own page. */
   protected readonly isOwnSettings = computed(() => this.targetUserId() === this.identityService.currentUser()?.userId);
+
+  /** Config values are editable only when the *viewer* is an admin — a normal user always sees their own values read-only, regardless of Configs.btAllowUserEdit. */
+  protected readonly isAdmin = computed(() => this.identityService.currentUser()?.isAdmin ?? false);
+
+  protected readonly sections = toSignal(
+    toObservable(this.targetUserId).pipe(switchMap((userId) => (userId ? this.configSettingsService.getSections(userId) : of([])))),
+    { initialValue: [] as UserConfigSection[] }
+  );
+
+  private readonly configControls = new Map<string, FormControl>();
+
+  protected readonly displayNameForm = new FormGroup({
+    displayName: new FormControl(this.identityService.currentUser()?.displayName ?? '', { nonNullable: true, validators: [Validators.required] })
+  });
+
+  protected readonly passwordForm = new FormGroup({
+    currentPassword: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    newPassword: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8)] }),
+    confirmPassword: new FormControl('', { nonNullable: true, validators: [Validators.required] })
+  });
+
+  constructor() {
+    // Rebuild one control per config whenever the loaded sections change (userId navigation, or a reload) — disabled up front for a normal user so they truly cannot submit an edit, not just visually greyed out.
+    effect(() => {
+      const sections = this.sections();
+      const editable = this.isAdmin();
+
+      this.configControls.clear();
+      for (const section of sections) {
+        for (const item of section.configs) {
+          const control = new FormControl<string | number | boolean | null>(this.currentValue(item));
+          if (!editable) {
+            control.disable();
+          }
+          this.configControls.set(item.sConfigCode, control);
+        }
+      }
+    });
+  }
+
+  protected getControl(configCode: string): FormControl {
+    return this.configControls.get(configCode)!;
+  }
+
+  private currentValue(item: UserConfigItem): string | number | boolean | null {
+    switch (item.configType) {
+      case ConfigValueType.Int:
+        return item.iConfigValue;
+      case ConfigValueType.Decimal:
+        return item.nConfigValue;
+      case ConfigValueType.Boolean:
+        return item.btConfigValue ?? false;
+      default:
+        return item.sConfigValue;
+    }
+  }
 
   protected onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
@@ -55,5 +121,66 @@ export class SettingsPage {
         this.snackBar.open(`Could not remove avatar: ${result.rejectionReason}`, 'Dismiss');
       }
     });
+  }
+
+  protected saveDisplayName(): void {
+    if (this.displayNameForm.invalid) {
+      return;
+    }
+
+    const displayName = this.displayNameForm.controls.displayName.value;
+    this.userSettingsService.updateDisplayName(displayName).subscribe((result) => {
+      if (result.success) {
+        this.identityService.checkSession().subscribe();
+        this.snackBar.open('Display name updated', 'Dismiss');
+      } else {
+        this.snackBar.open(`Could not update display name: ${result.rejectionReason}`, 'Dismiss');
+      }
+    });
+  }
+
+  protected passwordMismatch(): boolean {
+    const { newPassword, confirmPassword } = this.passwordForm.controls;
+    return confirmPassword.value.length > 0 && newPassword.value !== confirmPassword.value;
+  }
+
+  protected changePassword(): void {
+    if (this.passwordForm.invalid || this.passwordMismatch()) {
+      return;
+    }
+
+    const { currentPassword, newPassword } = this.passwordForm.controls;
+    this.userSettingsService.changePassword(currentPassword.value, newPassword.value).subscribe((result) => {
+      if (result.success) {
+        this.passwordForm.reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        this.snackBar.open('Password changed', 'Dismiss');
+      } else {
+        this.snackBar.open(`Could not change password: ${result.rejectionReason}`, 'Dismiss');
+      }
+    });
+  }
+
+  protected saveConfig(item: UserConfigItem): void {
+    const userId = this.targetUserId();
+    const control = this.getControl(item.sConfigCode);
+    const value = this.toConfigValueInput(item.configType, control.value);
+
+    this.configSettingsService.setValue(userId, item.sConfigCode, value).subscribe({
+      next: () => this.snackBar.open(`${item.sConfigName} updated`, 'Dismiss'),
+      error: () => this.snackBar.open(`Could not update ${item.sConfigName}`, 'Dismiss')
+    });
+  }
+
+  private toConfigValueInput(configType: ConfigValueType, value: string | number | boolean | null): ConfigValueInput {
+    switch (configType) {
+      case ConfigValueType.Int:
+        return { iConfigValue: value === null || value === '' ? null : Number(value) };
+      case ConfigValueType.Decimal:
+        return { nConfigValue: value === null || value === '' ? null : Number(value) };
+      case ConfigValueType.Boolean:
+        return { btConfigValue: Boolean(value) };
+      default:
+        return { sConfigValue: value === '' ? null : (value as string | null) };
+    }
   }
 }
