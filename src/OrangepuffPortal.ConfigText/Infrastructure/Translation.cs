@@ -13,7 +13,7 @@ internal class Translation(IConfigTextReader reader, ICurrentUser currentUser) :
 {
     public async Task<string> TranslateAsync(string code, string module, CancellationToken cancellationToken = default)
     {
-        var entries = await reader.GetAllAsync(currentUser.CultureCode, cancellationToken);
+        var entries = await reader.GetAllAsync(currentUser.CultureCode, modules: [module], cancellationToken: cancellationToken);
         var match = entries.FirstOrDefault(x => x.SModule == module && x.STextCode == code);
         return match?.SText ?? code;
     }

@@ -1,5 +1,5 @@
 import { EnvironmentProviders, InjectionToken, inject, makeEnvironmentProviders, provideAppInitializer } from '@angular/core';
-import { TranslationService } from '../translation/translation.service';
+import { DEFAULT_TRANSLATION_MODULES, TranslationService } from '../translation/translation.service';
 
 export interface PortalShellConfig {
   /** Header brand string and Landing's default title. */
@@ -16,6 +16,13 @@ export interface PortalShellConfig {
     tagline?: string;
     heroImageUrl?: string;
   };
+  /**
+   * This app's own ConfigTextDefinition module name(s) (e.g. "OCRWeb.ProjectManagement"), merged
+   * with the shell library's own modules when preloading translations at bootstrap — lets the
+   * consuming app's own components use TranslationService/the `translate` pipe for their own text
+   * too, without fetching every module ever seeded by every app sharing the portal.
+   */
+  translationModules?: string[];
 }
 
 export const PORTAL_SHELL_CONFIG = new InjectionToken<PortalShellConfig>('PORTAL_SHELL_CONFIG');
@@ -26,6 +33,9 @@ export function providePortalShell(config: PortalShellConfig): EnvironmentProvid
     // Preloads ConfigTextDefinition once at bootstrap so the `translate` pipe/TranslationService.get()
     // have data ready before the first render — automatic for every consuming app, no extra wiring
     // required there, mirroring the backend's PortalShellTextPortalModule seeding automatically.
-    provideAppInitializer(() => inject(TranslationService).preload('en-US'))
+    provideAppInitializer(() => {
+      const modules = [...DEFAULT_TRANSLATION_MODULES, ...(config.translationModules ?? [])];
+      return inject(TranslationService).preload('en-US', modules);
+    })
   ]);
 }
