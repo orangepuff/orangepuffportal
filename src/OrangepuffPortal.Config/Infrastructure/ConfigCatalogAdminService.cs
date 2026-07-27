@@ -36,7 +36,12 @@ internal class ConfigCatalogAdminService(
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
-        var section = new ConfigSection(request.SSectionDesc, request.STextCode, request.BtShow, DateTime.UtcNow, request.ISortOrder, actorUserId);
+        // Auto-assigns the next sort order when the admin leaves it blank, instead of leaving the row
+        // unordered (nulls sort last, indistinguishable from "never given a position") - same reasoning
+        // applies to AddConfigAsync below, one section-scoped.
+        var sortOrder = request.ISortOrder ?? (await repository.GetMaxSectionSortOrderAsync(cancellationToken) ?? 0) + 1;
+
+        var section = new ConfigSection(request.SSectionDesc, request.STextCode, request.BtShow, DateTime.UtcNow, sortOrder, actorUserId);
         await repository.AddSectionAsync(section, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
 
@@ -124,9 +129,11 @@ internal class ConfigCatalogAdminService(
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
+        var sortOrder = request.ISortOrder ?? (await repository.GetMaxConfigSortOrderAsync(request.ISectionId, cancellationToken) ?? 0) + 1;
+
         var config = new ConfigItem(
             request.ISectionId, request.SConfigCode, request.SConfigName, request.STextCode, request.IConfigType, request.BtShow, request.BtAllowUserEdit, DateTime.UtcNow,
-            request.ISortOrder, request.SDefaultValue, request.IDefaultValue, request.NDefaultValue, request.BtDefaultValue, actorUserId);
+            sortOrder, request.SDefaultValue, request.IDefaultValue, request.NDefaultValue, request.BtDefaultValue, actorUserId);
         await repository.AddConfigAsync(config, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
 

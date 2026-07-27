@@ -22,6 +22,12 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
     public Task<bool> ExistsSectionAsync(string textCode, int? excludeId, CancellationToken cancellationToken = default) =>
         db.ConfigSections.AnyAsync(x => x.TextCode == textCode && x.Id != (excludeId ?? -1), cancellationToken);
 
+    public async Task<int?> GetMaxSectionSortOrderAsync(CancellationToken cancellationToken = default)
+    {
+        var orders = db.ConfigSections.Where(x => x.SortOrder != null).Select(x => x.SortOrder!.Value);
+        return await orders.AnyAsync(cancellationToken) ? await orders.MaxAsync(cancellationToken) : null;
+    }
+
     public async Task AddSectionAsync(ConfigSection section, CancellationToken cancellationToken = default) =>
         await db.ConfigSections.AddAsync(section, cancellationToken);
 
@@ -95,6 +101,12 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
 
     public Task<bool> HasConfigsForSectionAsync(int sectionId, CancellationToken cancellationToken = default) =>
         db.Configs.AnyAsync(x => x.SectionId == sectionId, cancellationToken);
+
+    public async Task<int?> GetMaxConfigSortOrderAsync(int sectionId, CancellationToken cancellationToken = default)
+    {
+        var orders = db.Configs.Where(x => x.SectionId == sectionId && x.SortOrder != null).Select(x => x.SortOrder!.Value);
+        return await orders.AnyAsync(cancellationToken) ? await orders.MaxAsync(cancellationToken) : null;
+    }
 
     public async Task<IReadOnlyList<ConfigItem>> ListConfigsWithDefaultAsync(CancellationToken cancellationToken = default) =>
         await db.Configs.AsNoTracking()

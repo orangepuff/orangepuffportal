@@ -220,6 +220,15 @@ A section can't be deleted while any config still references it (`section_has_co
 writes go through `ConfigSection.AdminUpdate`/`ConfigItem.AdminUpdate` (full-field update, distinct from the
 seed-only `Replace`) and reject on a duplicate key (`sTextCode` for sections, `sConfigCode` for configs).
 
+`AddSectionAsync`/`AddConfigAsync` auto-assign `iSortOrder` when the admin leaves it blank (`ISortOrder`
+null in the request): one past the current highest `SortOrder` in scope — every other section for
+`AddSectionAsync`, every other config in the *same* section for `AddConfigAsync` (`IConfigRepository.
+GetMaxSectionSortOrderAsync`/`GetMaxConfigSortOrderAsync`, both ignoring null-valued rows), or `1` if
+nothing in scope has one set yet. An explicitly given `ISortOrder` (including `0`) is always kept as-is —
+this only fills the gap when the admin doesn't set one, so a brand-new row still gets a real position
+instead of sorting last forever via the `null` fallback. `UpdateSectionAsync`/`UpdateConfigAsync` do not
+auto-assign — editing an existing row is expected to set (or clear) sort order deliberately.
+
 ## Default values
 
 `Configs` carries an optional default (`sDefaultValue`/`iDefaultValue`/`nDefaultValue`/`btDefaultValue`,
