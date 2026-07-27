@@ -51,7 +51,7 @@ internal class ConfigUserValueService(
                     row.Value?.DecimalValue,
                     row.Value?.BoolValue)).ToList();
 
-                return new UserConfigSectionDto(section.Module, section.SectionDesc, section.TextCode, section.SortOrder, items);
+                return new UserConfigSectionDto(section.SectionDesc, section.TextCode, section.SortOrder, items);
             })
             .ToList();
     }

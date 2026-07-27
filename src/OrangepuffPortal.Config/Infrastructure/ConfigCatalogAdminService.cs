@@ -30,13 +30,13 @@ internal class ConfigCatalogAdminService(
     {
         const string LogPrefix = nameof(ConfigCatalogAdminService) + "." + nameof(AddSectionAsync);
 
-        if (await repository.ExistsSectionAsync(request.SModule, request.STextCode, null, cancellationToken))
+        if (await repository.ExistsSectionAsync(request.STextCode, null, cancellationToken))
         {
-            logger.LogWarning("{LogPrefix}: rejected, duplicate key {Module}/{TextCode}", LogPrefix, request.SModule, request.STextCode);
+            logger.LogWarning("{LogPrefix}: rejected, duplicate key {TextCode}", LogPrefix, request.STextCode);
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
-        var section = new ConfigSection(request.SModule, request.SSectionDesc, request.STextCode, request.BtShow, DateTime.UtcNow, request.ISortOrder, actorUserId);
+        var section = new ConfigSection(request.SSectionDesc, request.STextCode, request.BtShow, DateTime.UtcNow, request.ISortOrder, actorUserId);
         await repository.AddSectionAsync(section, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
 
@@ -55,13 +55,13 @@ internal class ConfigCatalogAdminService(
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("not_found", cancellationToken));
         }
 
-        if (await repository.ExistsSectionAsync(request.SModule, request.STextCode, id, cancellationToken))
+        if (await repository.ExistsSectionAsync(request.STextCode, id, cancellationToken))
         {
-            logger.LogWarning("{LogPrefix}: rejected, duplicate key {Module}/{TextCode}", LogPrefix, request.SModule, request.STextCode);
+            logger.LogWarning("{LogPrefix}: rejected, duplicate key {TextCode}", LogPrefix, request.STextCode);
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
-        section.AdminUpdate(request.SModule, request.SSectionDesc, request.STextCode, request.BtShow, request.ISortOrder, actorUserId, DateTime.UtcNow);
+        section.AdminUpdate(request.SSectionDesc, request.STextCode, request.BtShow, request.ISortOrder, actorUserId, DateTime.UtcNow);
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: updated section {Id}", LogPrefix, id);
@@ -198,7 +198,7 @@ internal class ConfigCatalogAdminService(
     }
 
     private static ConfigSectionAdminDto ToSectionDto(ConfigSection section) =>
-        new(section.Id, section.Module, section.SectionDesc, section.TextCode, section.Show, section.SortOrder);
+        new(section.Id, section.SectionDesc, section.TextCode, section.Show, section.SortOrder);
 
     private static ConfigItemAdminDto ToItemDto(ConfigItem item, IReadOnlyDictionary<int, ConfigSection> sections)
     {

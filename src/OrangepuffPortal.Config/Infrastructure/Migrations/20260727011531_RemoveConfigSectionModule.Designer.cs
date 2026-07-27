@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OrangepuffPortal.Config.Infrastructure;
 
@@ -11,9 +12,11 @@ using OrangepuffPortal.Config.Infrastructure;
 namespace OrangepuffPortal.Config.Infrastructure.Migrations
 {
     [DbContext(typeof(ConfigDbContext))]
-    partial class ConfigDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727011531_RemoveConfigSectionModule")]
+    partial class RemoveConfigSectionModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

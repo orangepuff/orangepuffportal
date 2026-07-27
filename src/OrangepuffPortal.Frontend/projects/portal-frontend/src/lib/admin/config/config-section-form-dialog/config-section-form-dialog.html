@@ -3,11 +3,6 @@
 <form [formGroup]="form" (ngSubmit)="save()">
   <mat-dialog-content class="config-section-form-dialog__content">
     <mat-form-field appearance="outline">
-      <mat-label>{{ 'module' | translate:'OrangepuffPortal.Common' }}</mat-label>
-      <input matInput formControlName="sModule" />
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
       <mat-label>{{ 'admin.config.section.form.sectionDesc' | translate:module }}</mat-label>
       <input matInput formControlName="sSectionDesc" />
     </mat-form-field>

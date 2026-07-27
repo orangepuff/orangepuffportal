@@ -12,7 +12,6 @@ export const CONFIG_VALUE_TYPES: { value: number; textCode: string }[] = [
 
 export interface ConfigSection {
   id: number;
-  sModule: string;
   sSectionDesc: string;
   sTextCode: string;
   btShow: boolean;
@@ -20,7 +19,6 @@ export interface ConfigSection {
 }
 
 export interface ConfigSectionUpsertRequest {
-  sModule: string;
   sSectionDesc: string;
   sTextCode: string;
   btShow: boolean;

@@ -33,7 +33,6 @@ export interface UserConfigItem {
 
 /** Mirrors OrangepuffPortal.Config.Contract.UserConfigSectionDto. */
 export interface UserConfigSection {
-  sModule: string;
   sSectionDesc: string;
   sTextCode: string;
   iSortOrder: number | null;

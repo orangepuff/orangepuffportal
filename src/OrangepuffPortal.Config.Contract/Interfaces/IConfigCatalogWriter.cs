@@ -9,8 +9,11 @@ public interface IConfigCatalogWriter
 {
     /// <summary>
     /// Upserts <paramref name="module"/>'s sections and their nested configs. A section already
-    /// present (matched by module + STextCode) is left untouched unless it sets BtReplace; same for
-    /// each config within it (matched by SConfigCode alone, globally).
+    /// present (matched by STextCode alone, globally — the caller is expected to prefix its own
+    /// STextCode values, e.g. "ocrProjectManagement.general", so two consuming apps sharing this
+    /// catalog don't collide) is left untouched unless it sets BtReplace; same for each config
+    /// within it (matched by SConfigCode alone, globally). <paramref name="module"/> itself is only
+    /// used for log attribution now.
     /// </summary>
     /// <param name="existingUserIds">
     /// Every user id that already exists, so a brand-new config's DefaultValue (if any) can be backfilled

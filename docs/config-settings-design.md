@@ -18,7 +18,6 @@ All four tables live in **this repo** (`orangepuffportal`), schema `config`, nex
 ```
 config.ConfigSections
   iId              INT IDENTITY       PK
-  sModule          VARCHAR(60)        NOT NULL   -- owning app/module, e.g. 'OCRWeb.ProjectManagement'
   sSectionDesc     NVARCHAR(255)      NOT NULL   -- plain fallback description, always present
   sTextCode        VARCHAR(100)       NOT NULL   -- pointer into ConfigTextDefinition.sTextCode for the
                                                   -- localized section label (no FK — the two tables are
@@ -88,7 +87,12 @@ config.ConfigUsersHistory
 ```
 
 Unique keys:
-- `ConfigSections`: `(sModule, sTextCode)`
+- `ConfigSections`: `sTextCode` (standalone, globally unique across every consuming app sharing this
+  catalog — a seeding app is expected to prefix its own `STextCode` values, e.g.
+  `ocrProjectManagement.general`, same convention already used for `ConfigTextDefinition.sTextCode`.
+  There is deliberately no `sModule` column here, unlike `ConfigTextDefinition` — a settings UI never
+  filters sections by owning app, and admin-created sections have no "module" a human would know how
+  to fill in, so it was pure friction with no read-path payoff)
 - `Configs`: `sConfigCode` (standalone — a config is always looked up by this alone; a settings UI browses
   by listing sections then their configs, so sections don't need an equivalent standalone lookup code)
 - `ConfigUsers`: `(iUserId, iConfigId)` — one current value per user per config
@@ -134,7 +138,8 @@ public interface IConfigCatalogWriter
 }
 ```
 
-Per section: look up by `(module, STextCode)`; insert if missing, update `sSectionDesc`/`btShow` only if
+`module` is only used for log attribution now — it plays no role in the lookup/uniqueness key. Per section:
+look up by `STextCode` alone (global); insert if missing, update `sSectionDesc`/`btShow` only if
 `BtReplace`, otherwise skip. Per config within it: look up by `SConfigCode` alone (global); insert if
 missing (linked to the resolved `iSectionId`), update all fields including `iSectionId` (a config can move
 sections on a deliberate `BtReplace` re-seed) only if `BtReplace`, otherwise skip.
@@ -213,8 +218,7 @@ config code, and config name):
 
 A section can't be deleted while any config still references it (`section_has_configs` rejection). Admin
 writes go through `ConfigSection.AdminUpdate`/`ConfigItem.AdminUpdate` (full-field update, distinct from the
-seed-only `Replace`) and reject on a duplicate key (`(sModule, sTextCode)` for sections, `sConfigCode` for
-configs).
+seed-only `Replace`) and reject on a duplicate key (`sTextCode` for sections, `sConfigCode` for configs).
 
 ## Default values
 
@@ -223,12 +227,22 @@ exactly one set matching `iConfigType`, checked via `ConfigItem.HasDefaultValue`
 both only the *first* time a given (config, user) pair comes into existence — neither ever overwrites an
 already-set `ConfigUsers` value:
 
-1. **New config, existing users** — when `ConfigCatalogWriter.UpsertAsync` *creates* a config (not a
-   `BtReplace` update of one already there) with a default set, it backfills that default onto every id in
-   the `existingUserIds` list the caller passed in (Config has no way to enumerate users itself — the
-   consuming app's own startup code fetches ids from Identity and passes them through). Re-seeding an
-   existing config with a changed default (`BtReplace`) only updates the stored default for *future* new
-   users/configs — it never retroactively touches anyone's existing value.
+1. **New config, existing users** — two independent call sites reach the same "someone just created a
+   config with a default" moment, one per write path:
+   - **Seeded at startup**: when `ConfigCatalogWriter.UpsertAsync` *creates* a config (not a `BtReplace`
+     update of one already there) with a default set, it backfills that default onto every id in the
+     `existingUserIds` list the caller passed in (Config has no way to enumerate users itself — the
+     consuming app's own startup code fetches ids from Identity and passes them through). Re-seeding an
+     existing config with a changed default (`BtReplace`) only updates the stored default for *future*
+     new users/configs — it never retroactively touches anyone's existing value.
+   - **Created from the admin CRUD screen**: `ConfigCatalogAdminService.AddConfigAsync` calls
+     `IConfigUserValueService.ApplyDefaultForNewConfigAsync(configId, actorUserId)` right after insert,
+     which reads every user id via `IUserDirectory` (`OrangepuffPortal.Shared.Auditing` — a thin
+     cross-module reader over `identity.Users`, implemented in `OrangepuffPortal.Host` since only the
+     composition root may reference another module's DbContext directly) and bulk-inserts a `ConfigUsers`
+     row for each one via `AddUserValuesAsync`. Swallowed/logged as a warning, same reasoning as path 2
+     below — a hiccup here must not fail the "config created" response since the catalog row already
+     committed.
 2. **New user, existing configs** — Identity's `AddUserCommandHandler` and `ProvisionGoogleUserCommandHandler`
    (Google self-registration) both publish a `UserCreatedNotification(UserId, ActorUserId)` (MediatR, defined
    in `OrangepuffPortal.Shared.Events` since Identity and Config don't otherwise reference each other) after

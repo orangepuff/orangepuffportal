@@ -6,14 +6,14 @@ namespace OrangepuffPortal.Config.Domain.Repositories;
 public interface IConfigRepository
 {
     // Catalog — sections
-    Task<ConfigSection?> FindSectionAsync(string module, string textCode, CancellationToken cancellationToken = default);
+    Task<ConfigSection?> FindSectionAsync(string textCode, CancellationToken cancellationToken = default);
 
     Task<ConfigSection?> GetSectionByIdAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>Unpaged — the catalog's sections are expected to stay a small, hand-curated list.</summary>
     Task<IReadOnlyList<ConfigSection>> ListSectionsAsync(CancellationToken cancellationToken = default);
 
-    Task<bool> ExistsSectionAsync(string module, string textCode, int? excludeId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsSectionAsync(string textCode, int? excludeId, CancellationToken cancellationToken = default);
 
     Task AddSectionAsync(ConfigSection section, CancellationToken cancellationToken = default);
 

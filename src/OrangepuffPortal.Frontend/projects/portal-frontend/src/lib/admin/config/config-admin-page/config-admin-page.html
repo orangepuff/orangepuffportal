@@ -119,11 +119,6 @@
         </div>
 
         <table mat-table [dataSource]="sectionsDataSource" matSort #sectionSort="matSort" class="config-admin-page__table">
-          <ng-container matColumnDef="sModule">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'module' | translate:'OrangepuffPortal.Common' }}</th>
-            <td mat-cell *matCellDef="let section">{{ section.sModule }}</td>
-          </ng-container>
-
           <ng-container matColumnDef="sSectionDesc">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'description' | translate:'OrangepuffPortal.Common' }}</th>
             <td mat-cell *matCellDef="let section">{{ section.sSectionDesc }}</td>
