@@ -25,11 +25,11 @@ internal class ConfigCatalogWriter(IConfigRepository repository, ILogger<ConfigC
 
         foreach (var sectionEntry in sections)
         {
-            var section = await repository.FindSectionAsync(module, sectionEntry.STextCode, cancellationToken);
+            var section = await repository.FindSectionAsync(sectionEntry.STextCode, cancellationToken);
 
             if (section is null)
             {
-                section = new ConfigSection(module, sectionEntry.SSectionDesc, sectionEntry.STextCode, sectionEntry.BtShow, utcNow, sectionEntry.ISortOrder);
+                section = new ConfigSection(sectionEntry.SSectionDesc, sectionEntry.STextCode, sectionEntry.BtShow, utcNow, sectionEntry.ISortOrder);
                 await repository.AddSectionAsync(section, cancellationToken);
                 // Configs below need section.Id for their FK, so this one flushes early.
                 await repository.SaveChangesAsync(cancellationToken);

@@ -29,14 +29,14 @@ namespace OrangepuffPortal.Bff.Endpoints.ConfigAdminEndpoints
             app.MapPost("/config/sections", async (AddConfigSectionRequest req, ClaimsPrincipal user, IConfigGateway gateway, CancellationToken ct) =>
             {
                 var actorUserId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var result = await gateway.AddSectionAsync(new ConfigSectionUpsertRequest(req.SModule, req.SSectionDesc, req.STextCode, req.BtShow, req.ISortOrder), actorUserId, ct);
+                var result = await gateway.AddSectionAsync(new ConfigSectionUpsertRequest(req.SSectionDesc, req.STextCode, req.BtShow, req.ISortOrder), actorUserId, ct);
                 return Results.Ok(result);
             });
 
             app.MapPut("/config/sections/{id:int}", async (int id, UpdateConfigSectionRequest req, ClaimsPrincipal user, IConfigGateway gateway, CancellationToken ct) =>
             {
                 var actorUserId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-                var result = await gateway.UpdateSectionAsync(id, new ConfigSectionUpsertRequest(req.SModule, req.SSectionDesc, req.STextCode, req.BtShow, req.ISortOrder), actorUserId, ct);
+                var result = await gateway.UpdateSectionAsync(id, new ConfigSectionUpsertRequest(req.SSectionDesc, req.STextCode, req.BtShow, req.ISortOrder), actorUserId, ct);
                 return Results.Ok(result);
             });
 

@@ -13,7 +13,6 @@ export interface ConfigSectionFormDialogData {
 }
 
 export interface ConfigSectionFormDialogResult {
-  sModule: string;
   sSectionDesc: string;
   sTextCode: string;
   btShow: boolean;
@@ -34,7 +33,6 @@ export class ConfigSectionFormDialog {
   protected readonly isEdit = this.data.section !== null;
 
   protected readonly form = new FormGroup({
-    sModule: new FormControl(this.data.section?.sModule ?? '', { nonNullable: true, validators: [Validators.required] }),
     sSectionDesc: new FormControl(this.data.section?.sSectionDesc ?? '', { nonNullable: true, validators: [Validators.required] }),
     sTextCode: new FormControl(this.data.section?.sTextCode ?? '', { nonNullable: true, validators: [Validators.required] }),
     btShow: new FormControl(this.data.section?.btShow ?? true, { nonNullable: true }),
@@ -48,7 +46,6 @@ export class ConfigSectionFormDialog {
 
     const value = this.form.getRawValue();
     this.dialogRef.close({
-      sModule: value.sModule,
       sSectionDesc: value.sSectionDesc,
       sTextCode: value.sTextCode,
       btShow: value.btShow,

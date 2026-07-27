@@ -12,7 +12,11 @@ namespace OrangepuffPortal.Config.Infrastructure;
 /// Admin CRUD over the [config].[ConfigSections]/[Configs] catalog, driven by a signed-in admin from
 /// the Bff — unlike <see cref="ConfigCatalogWriter"/>, which is only ever run by unattended startup seeding.
 /// </summary>
-internal class ConfigCatalogAdminService(IConfigRepository repository, ITranslation translation, ILogger<ConfigCatalogAdminService> logger) : IConfigCatalogAdminService
+internal class ConfigCatalogAdminService(
+    IConfigRepository repository,
+    IConfigUserValueService configUserValueService,
+    ITranslation translation,
+    ILogger<ConfigCatalogAdminService> logger) : IConfigCatalogAdminService
 {
     private const string ModuleName = "OrangepuffPortal.Config";
 
@@ -26,13 +30,18 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ITranslat
     {
         const string LogPrefix = nameof(ConfigCatalogAdminService) + "." + nameof(AddSectionAsync);
 
-        if (await repository.ExistsSectionAsync(request.SModule, request.STextCode, null, cancellationToken))
+        if (await repository.ExistsSectionAsync(request.STextCode, null, cancellationToken))
         {
-            logger.LogWarning("{LogPrefix}: rejected, duplicate key {Module}/{TextCode}", LogPrefix, request.SModule, request.STextCode);
+            logger.LogWarning("{LogPrefix}: rejected, duplicate key {TextCode}", LogPrefix, request.STextCode);
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
-        var section = new ConfigSection(request.SModule, request.SSectionDesc, request.STextCode, request.BtShow, DateTime.UtcNow, request.ISortOrder, actorUserId);
+        // Auto-assigns the next sort order when the admin leaves it blank, instead of leaving the row
+        // unordered (nulls sort last, indistinguishable from "never given a position") - same reasoning
+        // applies to AddConfigAsync below, one section-scoped.
+        var sortOrder = request.ISortOrder ?? (await repository.GetMaxSectionSortOrderAsync(cancellationToken) ?? 0) + 1;
+
+        var section = new ConfigSection(request.SSectionDesc, request.STextCode, request.BtShow, DateTime.UtcNow, sortOrder, actorUserId);
         await repository.AddSectionAsync(section, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
 
@@ -51,13 +60,13 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ITranslat
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("not_found", cancellationToken));
         }
 
-        if (await repository.ExistsSectionAsync(request.SModule, request.STextCode, id, cancellationToken))
+        if (await repository.ExistsSectionAsync(request.STextCode, id, cancellationToken))
         {
-            logger.LogWarning("{LogPrefix}: rejected, duplicate key {Module}/{TextCode}", LogPrefix, request.SModule, request.STextCode);
+            logger.LogWarning("{LogPrefix}: rejected, duplicate key {TextCode}", LogPrefix, request.STextCode);
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
-        section.AdminUpdate(request.SModule, request.SSectionDesc, request.STextCode, request.BtShow, request.ISortOrder, actorUserId, DateTime.UtcNow);
+        section.AdminUpdate(request.SSectionDesc, request.STextCode, request.BtShow, request.ISortOrder, actorUserId, DateTime.UtcNow);
         await repository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: updated section {Id}", LogPrefix, id);
@@ -120,11 +129,26 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ITranslat
             return ConfigCatalogAdminResult.Rejected(await TranslateAsync("duplicate_key", cancellationToken));
         }
 
+        var sortOrder = request.ISortOrder ?? (await repository.GetMaxConfigSortOrderAsync(request.ISectionId, cancellationToken) ?? 0) + 1;
+
         var config = new ConfigItem(
             request.ISectionId, request.SConfigCode, request.SConfigName, request.STextCode, request.IConfigType, request.BtShow, request.BtAllowUserEdit, DateTime.UtcNow,
-            request.ISortOrder, request.SDefaultValue, request.IDefaultValue, request.NDefaultValue, request.BtDefaultValue, actorUserId);
+            sortOrder, request.SDefaultValue, request.IDefaultValue, request.NDefaultValue, request.BtDefaultValue, actorUserId);
         await repository.AddConfigAsync(config, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
+
+        // Mirrors ApplyConfigDefaultsOnUserCreatedHandler's reasoning: backfilling existing users with
+        // this new config's default is a side effect of the config now existing, not of this admin
+        // request per se, so a hiccup here must never surface as "config creation failed" when the
+        // catalog row was already committed successfully.
+        try
+        {
+            await configUserValueService.ApplyDefaultForNewConfigAsync(config.Id, actorUserId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "{LogPrefix}: failed to backfill existing users with the default for config {Id}", LogPrefix, config.Id);
+        }
 
         logger.LogInformation("{LogPrefix}: created config {Id}", LogPrefix, config.Id);
         return ConfigCatalogAdminResult.Created(config.Id, await TranslateAsync("config_created", cancellationToken));
@@ -181,7 +205,7 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ITranslat
     }
 
     private static ConfigSectionAdminDto ToSectionDto(ConfigSection section) =>
-        new(section.Id, section.Module, section.SectionDesc, section.TextCode, section.Show, section.SortOrder);
+        new(section.Id, section.SectionDesc, section.TextCode, section.Show, section.SortOrder);
 
     private static ConfigItemAdminDto ToItemDto(ConfigItem item, IReadOnlyDictionary<int, ConfigSection> sections)
     {

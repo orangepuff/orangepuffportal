@@ -11,7 +11,6 @@ GO
 CREATE TABLE config.ConfigSections
 (
     iId             INT IDENTITY(1,1)  NOT NULL,
-    sModule         VARCHAR(60)        NOT NULL,
     sSectionDesc    NVARCHAR(255)      NOT NULL,
     sTextCode       VARCHAR(100)       NOT NULL,
     btShow          BIT                NOT NULL CONSTRAINT DF_ConfigSections_btShow DEFAULT (1),
@@ -25,8 +24,8 @@ CREATE TABLE config.ConfigSections
 );
 GO
 
-CREATE UNIQUE NONCLUSTERED INDEX UQ_ConfigSections_Module_TextCode
-    ON config.ConfigSections (sModule, sTextCode);
+CREATE UNIQUE NONCLUSTERED INDEX UQ_ConfigSections_TextCode
+    ON config.ConfigSections (sTextCode);
 GO
 
 CREATE TABLE config.Configs

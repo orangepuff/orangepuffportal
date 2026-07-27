@@ -12,7 +12,7 @@ public class ConfigCatalogWriterTests
     private static Mock<IConfigRepository> NewRepoForBrandNewConfig(string configCode)
     {
         var repo = new Mock<IConfigRepository>();
-        repo.Setup(r => r.FindSectionAsync("TestModule", "test.section", It.IsAny<CancellationToken>())).ReturnsAsync((ConfigSection?)null);
+        repo.Setup(r => r.FindSectionAsync("test.section", It.IsAny<CancellationToken>())).ReturnsAsync((ConfigSection?)null);
         repo.Setup(r => r.FindConfigByCodeAsync(configCode, It.IsAny<CancellationToken>())).ReturnsAsync((ConfigItem?)null);
         return repo;
     }
@@ -74,7 +74,7 @@ public class ConfigCatalogWriterTests
         var existingConfig = new ConfigItem(1, "test.existing", "Existing", "test.existing.textcode", (int)ConfigValueType.Int, true, false, DateTime.UtcNow);
 
         var repo = new Mock<IConfigRepository>();
-        repo.Setup(r => r.FindSectionAsync("TestModule", "test.section", It.IsAny<CancellationToken>())).ReturnsAsync((ConfigSection?)null);
+        repo.Setup(r => r.FindSectionAsync("test.section", It.IsAny<CancellationToken>())).ReturnsAsync((ConfigSection?)null);
         repo.Setup(r => r.FindConfigByCodeAsync("test.existing", It.IsAny<CancellationToken>())).ReturnsAsync(existingConfig);
 
         var writer = new ConfigCatalogWriter(repo.Object, NullLogger<ConfigCatalogWriter>.Instance);

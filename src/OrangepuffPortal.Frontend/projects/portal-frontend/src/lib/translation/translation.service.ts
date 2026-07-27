@@ -19,6 +19,8 @@ export const DEFAULT_TRANSLATION_MODULES = ['OrangepuffPortal.Common', 'Orangepu
 export class TranslationService {
   private readonly http = inject(HttpClient);
   private entries = new Map<string, string>();
+  private loadedCulture = 'en-US';
+  private loadedModules: string[] = DEFAULT_TRANSLATION_MODULES;
 
   /**
    * @param modules Only these modules' rows are fetched — the shared ConfigTextDefinition table
@@ -42,7 +44,24 @@ export class TranslationService {
       this.entries = new Map(rows.map((row) => [this.key(row.sModule, row.sTextCode), row.sText]));
     } catch {
       this.entries = new Map();
+    } finally {
+      this.loadedCulture = cultureCode;
+      this.loadedModules = modules;
     }
+  }
+
+  /**
+   * Re-preloads with a different culture, reusing whatever module list the initial bootstrap
+   * {@link preload} call was given — used by AuthService to switch from the bootstrap-time
+   * "en-US" (before the signed-in user's culture is known) to the user's own `CurrentUser.cultureCode`
+   * once login/session-check resolves, and back again on logout. No-op if the culture is unchanged.
+   */
+  async reloadForCulture(cultureCode: string): Promise<void> {
+    if (cultureCode === this.loadedCulture) {
+      return;
+    }
+
+    await this.preload(cultureCode, this.loadedModules);
   }
 
   get(code: string, module: string): string {

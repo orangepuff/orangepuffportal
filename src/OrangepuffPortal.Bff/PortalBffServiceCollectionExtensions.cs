@@ -5,6 +5,7 @@ using OrangepuffPortal.Bff.Infrastructure;
 using OrangepuffPortal.Bff.Infrastructure.ConfigGateway;
 using OrangepuffPortal.Bff.Infrastructure.ConfigTextGateway;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
+using OrangepuffPortal.Config.Contract.Interfaces;
 using OrangepuffPortal.Shared.Auditing;
 using System.Security.Claims;
 
@@ -155,6 +156,12 @@ namespace OrangepuffPortal.Bff
                         {
                             context.Identity.AddClaim(new Claim(PortalBffConstants.AdminClaimType, "true"));
                         }
+
+                        // No explicit SignInAsync exists on this path — the cookie middleware issues it
+                        // automatically once this event returns, so this is the only reliable choke
+                        // point to warm ICurrentUserConfig's cache for a Google-authenticated user.
+                        var configWarmer = context.HttpContext.RequestServices.GetRequiredService<IUserConfigCacheWarmer>();
+                        await configWarmer.WarmAsync(result.UserId!.Value, context.HttpContext.RequestAborted);
                     };
 
                     options.Events.OnRemoteFailure = context =>
