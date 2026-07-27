@@ -2,6 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Every service logs
+
+Every class that does real work (admin services, domain-event handlers, cross-module readers like
+`IUserDirectory`, anything under `Infrastructure/`) takes an `ILogger<T>` and logs at the level that
+matches what happened, not just the ones an existing sibling file happened to use:
+
+- **Debug** — routine internal steps worth seeing when diagnosing an issue but not otherwise
+  (a no-op/early-return branch, a raw count read from a repository).
+- **Information** — a mutation succeeded, or a notification/backfill applied something
+  (e.g. "created config X", "backfilled config's default onto N existing users").
+- **Warning** — a request was rejected or skipped for an expected, recoverable reason
+  (duplicate key, not found, a background side effect that failed but the main operation still
+  succeeded — see `ApplyConfigDefaultsOnUserCreatedHandler` and `ConfigCatalogAdminService.AddConfigAsync`'s
+  backfill call for the "swallow and warn, don't fail the caller" pattern).
+- **Error** — an invariant the caller should never have been able to violate was violated anyway
+  (e.g. `GetConfigOrThrowAsync` logging before it throws for a config code that doesn't exist).
+
+Every call includes a `LogPrefix` identifying the class and method as the first structured parameter,
+built from `nameof(...)` so renames stay safe: a `private const string LogPrefix = nameof(Class) + "." +
+nameof(Method);` field for a single-method class, or a local `const string LogPrefix = ...` declared
+inside each method for classes with more than one (see `ConfigCatalogAdminService`,
+`ConfigUserValueService`). Usage: `logger.LogInformation("{LogPrefix}: did the thing", LogPrefix)`.
+When adding or fixing a service, check it already has this — don't assume a class compiles fine
+without an `ILogger` means it doesn't need one.
+
 ## Frontend library local dev loop
 
 `src/OrangepuffPortal.Frontend` (`@orangepuff/portal-frontend`) and `src/OrangepuffPortal.Frontend.Shared`

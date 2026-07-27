@@ -12,7 +12,11 @@ namespace OrangepuffPortal.Config.Infrastructure;
 /// Admin CRUD over the [config].[ConfigSections]/[Configs] catalog, driven by a signed-in admin from
 /// the Bff — unlike <see cref="ConfigCatalogWriter"/>, which is only ever run by unattended startup seeding.
 /// </summary>
-internal class ConfigCatalogAdminService(IConfigRepository repository, ITranslation translation, ILogger<ConfigCatalogAdminService> logger) : IConfigCatalogAdminService
+internal class ConfigCatalogAdminService(
+    IConfigRepository repository,
+    IConfigUserValueService configUserValueService,
+    ITranslation translation,
+    ILogger<ConfigCatalogAdminService> logger) : IConfigCatalogAdminService
 {
     private const string ModuleName = "OrangepuffPortal.Config";
 
@@ -125,6 +129,19 @@ internal class ConfigCatalogAdminService(IConfigRepository repository, ITranslat
             request.ISortOrder, request.SDefaultValue, request.IDefaultValue, request.NDefaultValue, request.BtDefaultValue, actorUserId);
         await repository.AddConfigAsync(config, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
+
+        // Mirrors ApplyConfigDefaultsOnUserCreatedHandler's reasoning: backfilling existing users with
+        // this new config's default is a side effect of the config now existing, not of this admin
+        // request per se, so a hiccup here must never surface as "config creation failed" when the
+        // catalog row was already committed successfully.
+        try
+        {
+            await configUserValueService.ApplyDefaultForNewConfigAsync(config.Id, actorUserId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "{LogPrefix}: failed to backfill existing users with the default for config {Id}", LogPrefix, config.Id);
+        }
 
         logger.LogInformation("{LogPrefix}: created config {Id}", LogPrefix, config.Id);
         return ConfigCatalogAdminResult.Created(config.Id, await TranslateAsync("config_created", cancellationToken));

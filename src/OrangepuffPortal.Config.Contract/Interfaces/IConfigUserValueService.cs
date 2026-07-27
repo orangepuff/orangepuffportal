@@ -31,4 +31,13 @@ public interface IConfigUserValueService
     /// (nothing to snapshot on a first-ever insert).
     /// </summary>
     Task ApplyDefaultsForNewUserAsync(int userId, int actorUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The mirror image of <see cref="ApplyDefaultsForNewUserAsync"/>: when a newly-created config has a
+    /// default value, inserts a ConfigUsers row for every existing user so they see that default
+    /// immediately instead of a blank value until they explicitly save one. No-op if the config has no
+    /// default configured. Skips any user that already has a value for it (idempotency), same reasoning
+    /// as the new-user path.
+    /// </summary>
+    Task ApplyDefaultForNewConfigAsync(int configId, int actorUserId, CancellationToken cancellationToken = default);
 }
