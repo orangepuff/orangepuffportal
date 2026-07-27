@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OrangepuffPortal.Bff;
 using OrangepuffPortal.Config.Infrastructure;
+using OrangepuffPortal.ConfigData.Infrastructure;
 using OrangepuffPortal.ConfigText.Infrastructure;
 using OrangepuffPortal.Host.ConfigText;
 using OrangepuffPortal.Host.Infrastructure;
@@ -52,6 +53,7 @@ namespace OrangepuffPortal.Host
             services.AddIdentityModule(configuration);
             services.AddConfigTextModule(configuration);
             services.AddConfigModule(configuration);
+            services.AddConfigDataModule(configuration);
             services.AddPortalBff(configuration);
 
             // Runs through the same MigratePortalModulesAsync() pipeline as every other IPortalModule —

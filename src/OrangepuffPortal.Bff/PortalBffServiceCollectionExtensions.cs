@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using OrangepuffPortal.Bff.Infrastructure;
+using OrangepuffPortal.Bff.Infrastructure.ConfigDataGateway;
 using OrangepuffPortal.Bff.Infrastructure.ConfigGateway;
 using OrangepuffPortal.Bff.Infrastructure.ConfigTextGateway;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
@@ -28,6 +29,7 @@ namespace OrangepuffPortal.Bff
             services.AddScoped<IIdentityGateway, IdentityGateway>();
             services.AddScoped<IConfigGateway, ConfigGateway>();
             services.AddScoped<IConfigTextGateway, ConfigTextGateway>();
+            services.AddScoped<IConfigDataGateway, ConfigDataGateway>();
 
             services.AddAuthentication(options =>
                 {
