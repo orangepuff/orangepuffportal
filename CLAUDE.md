@@ -2,6 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Every service logs
+
+Every class that does real work (admin services, domain-event handlers, cross-module readers like
+`IUserDirectory`, anything under `Infrastructure/`) takes an `ILogger<T>` and logs at the level that
+matches what happened, not just the ones an existing sibling file happened to use:
+
+- **Debug** — routine internal steps worth seeing when diagnosing an issue but not otherwise
+  (a no-op/early-return branch, a raw count read from a repository).
+- **Information** — a mutation succeeded, or a notification/backfill applied something
+  (e.g. "created config X", "backfilled config's default onto N existing users").
+- **Warning** — a request was rejected or skipped for an expected, recoverable reason
+  (duplicate key, not found, a background side effect that failed but the main operation still
+  succeeded — see `ApplyConfigDefaultsOnUserCreatedHandler` and `ConfigCatalogAdminService.AddConfigAsync`'s
+  backfill call for the "swallow and warn, don't fail the caller" pattern).
+- **Error** — an invariant the caller should never have been able to violate was violated anyway
+  (e.g. `GetConfigOrThrowAsync` logging before it throws for a config code that doesn't exist).
+
+Every call includes a `LogPrefix` identifying the class and method as the first structured parameter,
+built from `nameof(...)` so renames stay safe: a `private const string LogPrefix = nameof(Class) + "." +
+nameof(Method);` field for a single-method class, or a local `const string LogPrefix = ...` declared
+inside each method for classes with more than one (see `ConfigCatalogAdminService`,
+`ConfigUserValueService`). Usage: `logger.LogInformation("{LogPrefix}: did the thing", LogPrefix)`.
+When adding or fixing a service, check it already has this — don't assume a class compiles fine
+without an `ILogger` means it doesn't need one.
+
 ## Frontend library local dev loop
 
 `src/OrangepuffPortal.Frontend` (`@orangepuff/portal-frontend`) and `src/OrangepuffPortal.Frontend.Shared`
@@ -75,6 +100,11 @@ duplicating them per screen.
 **Frontend**: inject `TranslationService` (`portal-frontend/src/lib/translation/`) or use the
 `translate` pipe in templates — `{{ 'admin.config.title' | translate:'OrangepuffPortal.Frontend' }}`.
 Same fallback rule as the backend (falls back to the code itself). The whole culture's text set is
-preloaded once at app bootstrap via `provideAppInitializer()` inside `providePortalShell()` — no
-extra wiring needed in a consuming app. For interpolated messages (e.g. `Delete user "{0}"?`), seed
-the `{0}`-style placeholder text and resolve with `TranslationService.getFormatted(code, module, ...args)`.
+preloaded once at app bootstrap via `provideAppInitializer()` inside `providePortalShell()`, using the
+guest culture `"en-US"` — no signed-in user is known yet at that point. Once `AuthService.checkSession()`
+resolves a user (called by the auth/admin guards, the header, and the landing page), `AuthService`
+switches `TranslationService` over to that user's own `CurrentUser.cultureCode` (`TranslationService.reloadForCulture`,
+a no-op if unchanged) via `identity`.`Users`.`sCultureCode`; `AuthService.logout()` switches it back to
+`"en-US"`. No extra wiring is needed in a consuming app — this all happens inside `AuthService`. For
+interpolated messages (e.g. `Delete user "{0}"?`), seed the `{0}`-style placeholder text and resolve
+with `TranslationService.getFormatted(code, module, ...args)`.

@@ -12,7 +12,6 @@ namespace OrangepuffPortal.Config.Domain.Entity;
 public class ConfigSection
 {
     public int Id { get; private set; }
-    public string Module { get; private set; } = string.Empty;
     public string SectionDesc { get; private set; } = string.Empty;
     public string TextCode { get; private set; } = string.Empty;
     public bool Show { get; private set; } = true;
@@ -24,13 +23,8 @@ public class ConfigSection
 
     private ConfigSection() { } // EF
 
-    public ConfigSection(string module, string sectionDesc, string textCode, bool show, DateTime utcNow, int? sortOrder = null, int? insertedUserId = null)
+    public ConfigSection(string sectionDesc, string textCode, bool show, DateTime utcNow, int? sortOrder = null, int? insertedUserId = null)
     {
-        if (string.IsNullOrWhiteSpace(module))
-        {
-            throw new ArgumentException("Module is required.", nameof(module));
-        }
-
         if (string.IsNullOrWhiteSpace(sectionDesc))
         {
             throw new ArgumentException("SectionDesc is required.", nameof(sectionDesc));
@@ -41,7 +35,6 @@ public class ConfigSection
             throw new ArgumentException("TextCode is required.", nameof(textCode));
         }
 
-        Module = module.Trim();
         SectionDesc = sectionDesc.Trim();
         TextCode = textCode.Trim();
         Show = show;
@@ -59,14 +52,9 @@ public class ConfigSection
         UpdatedTime = utcNow;
     }
 
-    /// <summary>Full-field overwrite from the admin CRUD screen — unlike <see cref="Replace"/>, this may also change the row's <see cref="Module"/>/<see cref="TextCode"/>.</summary>
-    public void AdminUpdate(string module, string sectionDesc, string textCode, bool show, int? sortOrder, int? updatedUserId, DateTime utcNow)
+    /// <summary>Full-field overwrite from the admin CRUD screen — unlike <see cref="Replace"/>, this may also change the row's <see cref="TextCode"/>.</summary>
+    public void AdminUpdate(string sectionDesc, string textCode, bool show, int? sortOrder, int? updatedUserId, DateTime utcNow)
     {
-        if (string.IsNullOrWhiteSpace(module))
-        {
-            throw new ArgumentException("Module is required.", nameof(module));
-        }
-
         if (string.IsNullOrWhiteSpace(sectionDesc))
         {
             throw new ArgumentException("SectionDesc is required.", nameof(sectionDesc));
@@ -77,7 +65,6 @@ public class ConfigSection
             throw new ArgumentException("TextCode is required.", nameof(textCode));
         }
 
-        Module = module.Trim();
         SectionDesc = sectionDesc.Trim();
         TextCode = textCode.Trim();
         Show = show;

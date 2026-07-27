@@ -56,7 +56,7 @@ export class ConfigAdminPage implements OnInit, AfterViewInit {
   // Sections are unpaged (small, hand-curated list) — sorted entirely client-side via
   // MatTableDataSource, unlike the Configs table below which sorts server-side.
   protected readonly sectionsDataSource = new MatTableDataSource<ConfigSection>([]);
-  protected readonly sectionColumns = ['sModule', 'sSectionDesc', 'sTextCode', 'btShow', 'actions'];
+  protected readonly sectionColumns = ['sSectionDesc', 'sTextCode', 'btShow', 'actions'];
 
   protected readonly items = signal<ConfigItemRow[]>([]);
   protected readonly totalCount = signal(0);

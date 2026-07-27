@@ -18,7 +18,6 @@ public class ConfigSectionConfiguration : IEntityTypeConfiguration<ConfigSection
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("iId").ValueGeneratedOnAdd();
 
-        builder.Property(x => x.Module).HasColumnName("sModule").HasColumnType("varchar(60)").IsRequired();
         builder.Property(x => x.SectionDesc).HasColumnName("sSectionDesc").HasColumnType("nvarchar(255)").IsRequired();
         builder.Property(x => x.TextCode).HasColumnName("sTextCode").HasColumnType("varchar(100)").IsRequired();
         builder.Property(x => x.Show).HasColumnName("btShow").HasDefaultValue(true);
@@ -29,8 +28,11 @@ public class ConfigSectionConfiguration : IEntityTypeConfiguration<ConfigSection
         builder.Property(x => x.UpdatedUserId).HasColumnName("iUpdatedUserId");
         builder.Property(x => x.UpdatedTime).HasColumnName("dtUpdatedTime").HasColumnType("datetime");
 
-        builder.HasIndex(x => new { x.Module, x.TextCode })
+        // TextCode alone is now the uniqueness key (Module removed) - a consuming app seeding its own
+        // default sections is expected to prefix its own STextCode values (e.g. "ocrProjectManagement.general"),
+        // same convention already used for ConfigTextDefinition.sTextCode.
+        builder.HasIndex(x => x.TextCode)
             .IsUnique()
-            .HasDatabaseName("UQ_ConfigSections_Module_TextCode");
+            .HasDatabaseName("UQ_ConfigSections_TextCode");
     }
 }

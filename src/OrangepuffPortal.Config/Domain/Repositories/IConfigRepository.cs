@@ -6,14 +6,17 @@ namespace OrangepuffPortal.Config.Domain.Repositories;
 public interface IConfigRepository
 {
     // Catalog — sections
-    Task<ConfigSection?> FindSectionAsync(string module, string textCode, CancellationToken cancellationToken = default);
+    Task<ConfigSection?> FindSectionAsync(string textCode, CancellationToken cancellationToken = default);
 
     Task<ConfigSection?> GetSectionByIdAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>Unpaged — the catalog's sections are expected to stay a small, hand-curated list.</summary>
     Task<IReadOnlyList<ConfigSection>> ListSectionsAsync(CancellationToken cancellationToken = default);
 
-    Task<bool> ExistsSectionAsync(string module, string textCode, int? excludeId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsSectionAsync(string textCode, int? excludeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Highest SortOrder set across every section (null-valued rows ignored), or null if none is set.</summary>
+    Task<int?> GetMaxSectionSortOrderAsync(CancellationToken cancellationToken = default);
 
     Task AddSectionAsync(ConfigSection section, CancellationToken cancellationToken = default);
 
@@ -35,6 +38,9 @@ public interface IConfigRepository
     Task<bool> ExistsConfigCodeAsync(string configCode, int? excludeId, CancellationToken cancellationToken = default);
 
     Task<bool> HasConfigsForSectionAsync(int sectionId, CancellationToken cancellationToken = default);
+
+    /// <summary>Highest SortOrder set among a section's configs (null-valued rows ignored), or null if none is set.</summary>
+    Task<int?> GetMaxConfigSortOrderAsync(int sectionId, CancellationToken cancellationToken = default);
 
     /// <summary>Every config that has at least one default value field set — used to apply defaults onto a newly-created user.</summary>
     Task<IReadOnlyList<ConfigItem>> ListConfigsWithDefaultAsync(CancellationToken cancellationToken = default);

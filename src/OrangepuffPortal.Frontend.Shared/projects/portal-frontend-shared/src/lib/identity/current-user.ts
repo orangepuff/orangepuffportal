@@ -3,4 +3,5 @@ export interface CurrentUser {
   email: string | null;
   displayName: string | null;
   isAdmin: boolean;
+  cultureCode: string;
 }

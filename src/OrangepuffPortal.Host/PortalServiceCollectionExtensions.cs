@@ -24,6 +24,7 @@ namespace OrangepuffPortal.Host
         {
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUser, CurrentUser>();
+            services.AddScoped<IUserDirectory, UserDirectory>();
 
             // Auto-stamp every transaction span with the current request's user (overrides the base registration from AddDiagnostics; scoped because ICurrentUser is scoped).
             services.AddScoped<ITransactionLogger>(sp => new RequestContextTransactionLogger(

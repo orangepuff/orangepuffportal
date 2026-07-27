@@ -8,8 +8,8 @@ namespace OrangepuffPortal.Config.Infrastructure.Repositories;
 
 public class ConfigRepository(ConfigDbContext db) : IConfigRepository
 {
-    public Task<ConfigSection?> FindSectionAsync(string module, string textCode, CancellationToken cancellationToken = default) =>
-        db.ConfigSections.FirstOrDefaultAsync(x => x.Module == module && x.TextCode == textCode, cancellationToken);
+    public Task<ConfigSection?> FindSectionAsync(string textCode, CancellationToken cancellationToken = default) =>
+        db.ConfigSections.FirstOrDefaultAsync(x => x.TextCode == textCode, cancellationToken);
 
     public Task<ConfigSection?> GetSectionByIdAsync(int id, CancellationToken cancellationToken = default) =>
         db.ConfigSections.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -19,8 +19,14 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
             .OrderBy(x => x.SortOrder ?? int.MaxValue).ThenBy(x => x.Id)
             .ToListAsync(cancellationToken);
 
-    public Task<bool> ExistsSectionAsync(string module, string textCode, int? excludeId, CancellationToken cancellationToken = default) =>
-        db.ConfigSections.AnyAsync(x => x.Module == module && x.TextCode == textCode && x.Id != (excludeId ?? -1), cancellationToken);
+    public Task<bool> ExistsSectionAsync(string textCode, int? excludeId, CancellationToken cancellationToken = default) =>
+        db.ConfigSections.AnyAsync(x => x.TextCode == textCode && x.Id != (excludeId ?? -1), cancellationToken);
+
+    public async Task<int?> GetMaxSectionSortOrderAsync(CancellationToken cancellationToken = default)
+    {
+        var orders = db.ConfigSections.Where(x => x.SortOrder != null).Select(x => x.SortOrder!.Value);
+        return await orders.AnyAsync(cancellationToken) ? await orders.MaxAsync(cancellationToken) : null;
+    }
 
     public async Task AddSectionAsync(ConfigSection section, CancellationToken cancellationToken = default) =>
         await db.ConfigSections.AddAsync(section, cancellationToken);
@@ -95,6 +101,12 @@ public class ConfigRepository(ConfigDbContext db) : IConfigRepository
 
     public Task<bool> HasConfigsForSectionAsync(int sectionId, CancellationToken cancellationToken = default) =>
         db.Configs.AnyAsync(x => x.SectionId == sectionId, cancellationToken);
+
+    public async Task<int?> GetMaxConfigSortOrderAsync(int sectionId, CancellationToken cancellationToken = default)
+    {
+        var orders = db.Configs.Where(x => x.SectionId == sectionId && x.SortOrder != null).Select(x => x.SortOrder!.Value);
+        return await orders.AnyAsync(cancellationToken) ? await orders.MaxAsync(cancellationToken) : null;
+    }
 
     public async Task<IReadOnlyList<ConfigItem>> ListConfigsWithDefaultAsync(CancellationToken cancellationToken = default) =>
         await db.Configs.AsNoTracking()
