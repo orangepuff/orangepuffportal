@@ -25,9 +25,8 @@ public static class ModuleRegistration
         services.AddScoped<IConfigCatalogAdminService, ConfigCatalogAdminService>();
         services.AddScoped<IConfigUserValueService, ConfigUserValueService>();
 
-        // UserConfigCache needs IMemoryCache — registered here rather than assumed already present, so
-        // this module doesn't depend on the host having called AddMemoryCache() itself (same reasoning
-        // as ConfigText's ModuleRegistration).
+        // UserConfigCache uses IMemoryCache as an L1 (synchronous) layer; IDistributedCache (Redis or
+        // fallback) is the L2 layer registered by AddOrangepuffPortal in OrangepuffPortal.Host.
         services.AddMemoryCache();
         services.AddSingleton<UserConfigCache>();
         services.AddScoped<ICurrentUserConfig, CurrentUserConfig>();

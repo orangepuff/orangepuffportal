@@ -55,7 +55,7 @@ internal class ConfigTextAdminService(IConfigTextRepository repository, ConfigTe
         }
 
         await repository.SaveChangesAsync(cancellationToken);
-        cache.Invalidate();
+        await cache.InvalidateAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: created row {Id}", LogPrefix, entry.Id);
         return ConfigTextAdminResult.Created(entry.Id, await TranslateAsync("configtext_created", cancellationToken));
@@ -80,7 +80,7 @@ internal class ConfigTextAdminService(IConfigTextRepository repository, ConfigTe
 
         entry.AdminUpdate(request.SModule, request.STextCode, request.SCultureCode, request.STextType, request.SText, request.SNote, actorUserId, DateTime.UtcNow);
         await repository.SaveChangesAsync(cancellationToken);
-        cache.Invalidate();
+        await cache.InvalidateAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: updated row {Id}", LogPrefix, id);
         return ConfigTextAdminResult.Updated(id, await TranslateAsync("configtext_updated", cancellationToken));
@@ -99,7 +99,7 @@ internal class ConfigTextAdminService(IConfigTextRepository repository, ConfigTe
 
         await repository.DeleteAsync(entry, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
-        cache.Invalidate();
+        await cache.InvalidateAsync(cancellationToken);
 
         logger.LogInformation("{LogPrefix}: deleted row {Id}", LogPrefix, id);
         return ConfigTextAdminResult.Deleted(await TranslateAsync("configtext_deleted", cancellationToken));

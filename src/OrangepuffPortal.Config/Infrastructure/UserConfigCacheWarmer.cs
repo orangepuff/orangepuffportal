@@ -17,7 +17,7 @@ internal sealed class UserConfigCacheWarmer(
         const string LogPrefix = nameof(UserConfigCacheWarmer) + "." + nameof(WarmAsync);
 
         var values = await userValueService.GetValuesAsync(userId, cancellationToken);
-        cache.Set(userId, values);
+        await cache.SetAsync(userId, values, cancellationToken);
 
         logger.LogDebug("{LogPrefix}: warmed {Count} config value(s) for user {UserId}", LogPrefix, values.Count, userId);
     }

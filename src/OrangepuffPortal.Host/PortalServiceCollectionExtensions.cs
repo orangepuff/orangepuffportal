@@ -1,6 +1,7 @@
 using Diagnostics.Abstractions.Interfaces;
 using Diagnostics.NLog.Transactions;
 using MediatR;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OrangepuffPortal.Bff;
@@ -25,6 +26,22 @@ namespace OrangepuffPortal.Host
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUser, CurrentUser>();
             services.AddScoped<IUserDirectory, UserDirectory>();
+
+            // Distributed cache: Redis when ConnectionStrings:Redis is provided, otherwise an
+            // in-process fallback so development environments without Redis work transparently.
+            var redisConnectionString = configuration.GetConnectionString("Redis");
+            if (!string.IsNullOrEmpty(redisConnectionString))
+            {
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = redisConnectionString;
+                    options.InstanceName = "portal:";
+                });
+            }
+            else
+            {
+                services.AddDistributedMemoryCache();
+            }
 
             // Auto-stamp every transaction span with the current request's user (overrides the base registration from AddDiagnostics; scoped because ICurrentUser is scoped).
             services.AddScoped<ITransactionLogger>(sp => new RequestContextTransactionLogger(

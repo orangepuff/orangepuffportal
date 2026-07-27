@@ -5,14 +5,21 @@ using OrangepuffPortal.ConfigText.Domain.Repositories;
 namespace OrangepuffPortal.ConfigText.Infrastructure;
 
 /// <summary>
-/// Resolves each (module, code, type) key to a single row: the exact-culture row if one exists, otherwise the "*" fallback row. Backed by <see cref="ConfigTextCache"/>.
+/// Resolves each (module, code, type) key to a single row: the exact-culture row if one exists,
+/// otherwise the "*" fallback row. Backed by <see cref="ConfigTextCache"/>.
 /// </summary>
 internal class ConfigTextReader(IConfigTextRepository repository, ConfigTextCache cache) : IConfigTextReader
 {
     public async Task<IReadOnlyList<ConfigTextEntryDto>> GetAllAsync(
         string cultureCode, IReadOnlyCollection<string>? modules = null, CancellationToken cancellationToken = default)
     {
-        var rows = await cache.GetOrCreateAsync(cultureCode, () => repository.GetForCultureAsync(cultureCode, cancellationToken));
+        var rows = await cache.GetOrCreateAsync(cultureCode, async () =>
+        {
+            var entities = await repository.GetForCultureAsync(cultureCode, cancellationToken);
+            return entities
+                .Select(e => new ConfigTextCacheRow(e.Module, e.TextCode, e.CultureCode, e.TextType, e.Text))
+                .ToList();
+        }, cancellationToken);
 
         // The cache always holds every module's rows for this culture (one cache entry per culture,
         // not per caller's module filter, to avoid fragmenting the cache by arbitrary module-set

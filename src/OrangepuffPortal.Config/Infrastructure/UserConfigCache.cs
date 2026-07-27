@@ -1,26 +1,70 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using OrangepuffPortal.Config.Contract;
+using System.Text.Json;
 
 namespace OrangepuffPortal.Config.Infrastructure;
 
 /// <summary>
-/// Per-user snapshot cache of <see cref="ConfigUserValueDto"/> lists — populated eagerly at login (see
-/// <see cref="UserConfigCacheWarmer"/>) and read synchronously by <see cref="CurrentUserConfig"/>.
-/// Sliding expiration matches the auth cookie's own <c>ExpireTimeSpan</c>
+/// Per-user snapshot cache of <see cref="ConfigUserValueDto"/> lists — populated eagerly at login
+/// (see <see cref="UserConfigCacheWarmer"/>) and read synchronously by <see cref="CurrentUserConfig"/>.
+/// </summary>
+/// <remarks>
+/// Uses a two-layer design:
+/// <list type="bullet">
+///   <item>L1 — <see cref="IMemoryCache"/>: fast synchronous reads within the same process.</item>
+///   <item>L2 — <see cref="IDistributedCache"/> (Redis): survives pod restarts and is shared
+///   across instances. On an L1 miss, <see cref="TryGet"/> falls back to a synchronous Redis read
+///   and re-populates L1 from it.</item>
+/// </list>
+/// Sliding expiration on both layers mirrors the auth cookie's own <c>ExpireTimeSpan</c>
 /// (<c>PortalBffServiceCollectionExtensions</c>) — a cache entry outlives an idle session for exactly
 /// as long as the cookie itself would.
-/// </summary>
-internal sealed class UserConfigCache(IMemoryCache cache)
+/// </remarks>
+internal sealed class UserConfigCache(IMemoryCache memoryCache, IDistributedCache distributedCache)
 {
-    private static readonly MemoryCacheEntryOptions EntryOptions = new() { SlidingExpiration = TimeSpan.FromHours(8) };
+    private static readonly DistributedCacheEntryOptions RedisOptions =
+        new() { SlidingExpiration = TimeSpan.FromHours(8) };
 
-    public bool TryGet(int userId, out IReadOnlyList<ConfigUserValueDto> values) =>
-        cache.TryGetValue(CacheKey(userId), out values!);
+    private static readonly MemoryCacheEntryOptions MemoryOptions =
+        new() { SlidingExpiration = TimeSpan.FromHours(8) };
 
-    public void Set(int userId, IReadOnlyList<ConfigUserValueDto> values) =>
-        cache.Set(CacheKey(userId), values, EntryOptions);
+    public bool TryGet(int userId, out IReadOnlyList<ConfigUserValueDto> values)
+    {
+        if (memoryCache.TryGetValue(CacheKey(userId), out values!))
+        {
+            return true;
+        }
 
-    public void Invalidate(int userId) => cache.Remove(CacheKey(userId));
+        // L2: synchronous Redis fallback — only on cold start or L1 eviction, so the blocking
+        // call here is infrequent and intentional.
+        var bytes = distributedCache.Get(CacheKey(userId));
+        if (bytes is not null)
+        {
+            values = JsonSerializer.Deserialize<List<ConfigUserValueDto>>(bytes)!;
+            memoryCache.Set(CacheKey(userId), values, MemoryOptions);
+            return true;
+        }
+
+        values = [];
+        return false;
+    }
+
+    public async Task SetAsync(int userId, IReadOnlyList<ConfigUserValueDto> values, CancellationToken cancellationToken = default)
+    {
+        memoryCache.Set(CacheKey(userId), values, MemoryOptions);
+        await distributedCache.SetAsync(
+            CacheKey(userId),
+            JsonSerializer.SerializeToUtf8Bytes(values),
+            RedisOptions,
+            cancellationToken);
+    }
+
+    public async Task InvalidateAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        memoryCache.Remove(CacheKey(userId));
+        await distributedCache.RemoveAsync(CacheKey(userId), cancellationToken);
+    }
 
     private static string CacheKey(int userId) => $"UserConfig:{userId}";
 }
