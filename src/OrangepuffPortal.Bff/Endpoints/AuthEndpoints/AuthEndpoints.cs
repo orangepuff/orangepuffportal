@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using OrangepuffPortal.Bff.Infrastructure;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
+using OrangepuffPortal.Config.Contract.Interfaces;
 using OrangepuffPortal.Shared.Auditing;
 using System.Security.Claims;
 
@@ -32,7 +33,7 @@ namespace OrangepuffPortal.Bff.Endpoints.AuthEndpoints
                 return Results.Challenge(properties, [GoogleDefaults.AuthenticationScheme]);
             });
 
-            app.MapPost("/bff/login/password", async (PasswordSignInRequest request, IIdentityGateway client, HttpContext context, CancellationToken ct) =>
+            app.MapPost("/bff/login/password", async (PasswordSignInRequest request, IIdentityGateway client, HttpContext context, IUserConfigCacheWarmer configWarmer, CancellationToken ct) =>
             {
                 var result = await client.VerifyPasswordAsync(request.UsernameOrEmail, request.Password, ct);
                 if (!result.Success)
@@ -65,6 +66,8 @@ namespace OrangepuffPortal.Bff.Endpoints.AuthEndpoints
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = true });
+
+                await configWarmer.WarmAsync(result.UserId!.Value, ct);
 
                 return Results.NoContent();
             });

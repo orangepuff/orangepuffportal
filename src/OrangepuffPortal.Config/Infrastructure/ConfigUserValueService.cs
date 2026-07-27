@@ -15,6 +15,7 @@ internal class ConfigUserValueService(
     IConfigRepository repository,
     ICurrentUser currentUser,
     IUserDirectory userDirectory,
+    UserConfigCache userConfigCache,
     ILogger<ConfigUserValueService> logger) : IConfigUserValueService
 {
     public async Task<ConfigUserValueDto?> GetValueAsync(int userId, string configCode, CancellationToken cancellationToken = default)
@@ -85,6 +86,10 @@ internal class ConfigUserValueService(
         }
 
         await repository.SaveChangesAsync(cancellationToken);
+
+        // Otherwise ICurrentUserConfig would keep serving the pre-update value out of the cache warmed
+        // at this user's login until the cache entry's sliding expiration lapses.
+        userConfigCache.Invalidate(userId);
     }
 
     public async Task ApplyDefaultsForNewUserAsync(int userId, int actorUserId, CancellationToken cancellationToken = default)

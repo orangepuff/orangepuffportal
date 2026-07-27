@@ -272,6 +272,53 @@ No `ConfigUsersHistory` row is written for either path — both only ever *inser
 row (guarded by an idempotency check against an existing row for path 2), and there's nothing to snapshot
 on a first-ever insert, matching `SetValueAsync`'s existing rule.
 
+## Synchronous read for the current user (`ICurrentUserConfig`)
+
+`IConfigUserValueService` is async and DB-backed — fine for a settings UI, too expensive for a hot-path
+check like "is this upload under the user's size limit" if every module doing that check paid for a
+database round trip per call. `ICurrentUserConfig` (`OrangepuffPortal.Config.Contract.Interfaces`) is a
+synchronous, per-request alternative backed by an in-memory cache:
+
+```csharp
+public interface ICurrentUserConfig
+{
+    int GetInt(string configCode, int fallback = default);
+    decimal GetDecimal(string configCode, decimal fallback = default);
+    bool GetBool(string configCode, bool fallback = default);
+    string? GetString(string configCode, string? fallback = null);
+    IReadOnlyList<ConfigUserValueDto> GetAll();
+}
+```
+
+Any module DI's this directly wherever it needs to check the signed-in user's own config, e.g.:
+
+```csharp
+var maxBytes = currentUserConfig.GetInt("ocrWeb.maxUploadSizeBytes", fallback: 10_485_760);
+```
+
+**Cache is warmed eagerly at login, not lazily on first read.** `IUserConfigCacheWarmer.WarmAsync(userId)`
+loads the user's full value list once via `IConfigUserValueService.GetValuesAsync` and stores it in
+`UserConfigCache` (`OrangepuffPortal.Config.Infrastructure`, a singleton wrapping `IMemoryCache`, keyed
+per user id). It's called from both places `OrangepuffPortal.Bff` issues the auth cookie:
+- `/bff/login/password` (`AuthEndpoints.cs`), right after `context.SignInAsync(...)`.
+- Google's `OnCreatingTicket` (`PortalBffServiceCollectionExtensions.cs`), right after the user id claim
+  is resolved — there's no explicit `SignInAsync` call on this path, the cookie middleware issues it
+  automatically once the event returns, so `OnCreatingTicket` is the only reliable choke point.
+
+Cache entries use a sliding expiration matching the auth cookie's own `ExpireTimeSpan` (8 hours) — an
+entry outlives an idle session for exactly as long as the cookie would. If a read ever misses the cache
+(expired mid-session, or a session that predates this feature), `ICurrentUserConfig` logs a warning and
+falls back to the caller-supplied default rather than blocking on a synchronous DB call — it does not
+lazily reload.
+
+**Invalidation**: `ConfigUserValueService.SetValueAsync` invalidates that user's cache entry after
+`SaveChangesAsync`, so an admin editing a value takes effect on the next read even mid-session. The two
+"apply defaults" paths (`ApplyDefaultsForNewUserAsync`, `ApplyDefaultForNewConfigAsync`) do **not**
+invalidate anything — the former runs before the affected user's first login (nothing cached yet to go
+stale), the latter can touch many users at once and `UserConfigCache` has no way to enumerate its keys;
+an admin bulk-adding a new config with a default is accepted as a known staleness window bounded by the
+8-hour sliding expiration, not by real-time invalidation.
+
 ## What's out of scope for now
 
 - No self-service (non-admin) config write endpoint — `btAllowUserEdit` is populated by seed data but not

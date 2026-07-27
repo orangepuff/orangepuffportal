@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using OrangepuffPortal.Config.Contract;
@@ -10,6 +11,8 @@ namespace OrangepuffPortal.Config.UnitTests;
 
 public class ConfigUserValueServiceTests
 {
+    private static UserConfigCache NewUserConfigCache() => new(new MemoryCache(new MemoryCacheOptions()));
+
     [Fact]
     public async Task ApplyDefaultsForNewUserAsync_inserts_a_value_for_a_config_with_a_default()
     {
@@ -19,7 +22,7 @@ public class ConfigUserValueServiceTests
         repo.Setup(r => r.ListConfigsWithDefaultAsync(It.IsAny<CancellationToken>())).ReturnsAsync([config]);
         repo.Setup(r => r.FindUserValueAsync(42, config.Id, It.IsAny<CancellationToken>())).ReturnsAsync((ConfigUser?)null);
 
-        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), Mock.Of<IUserDirectory>(), NullLogger<ConfigUserValueService>.Instance);
+        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), Mock.Of<IUserDirectory>(), NewUserConfigCache(), NullLogger<ConfigUserValueService>.Instance);
 
         await service.ApplyDefaultsForNewUserAsync(42, actorUserId: 0, CancellationToken.None);
 
@@ -39,7 +42,7 @@ public class ConfigUserValueServiceTests
         repo.Setup(r => r.ListConfigsWithDefaultAsync(It.IsAny<CancellationToken>())).ReturnsAsync([config]);
         repo.Setup(r => r.FindUserValueAsync(42, config.Id, It.IsAny<CancellationToken>())).ReturnsAsync(existingValue);
 
-        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), Mock.Of<IUserDirectory>(), NullLogger<ConfigUserValueService>.Instance);
+        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), Mock.Of<IUserDirectory>(), NewUserConfigCache(), NullLogger<ConfigUserValueService>.Instance);
 
         await service.ApplyDefaultsForNewUserAsync(42, actorUserId: 0, CancellationToken.None);
 
@@ -53,7 +56,7 @@ public class ConfigUserValueServiceTests
         var repo = new Mock<IConfigRepository>();
         repo.Setup(r => r.ListConfigsWithDefaultAsync(It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), Mock.Of<IUserDirectory>(), NullLogger<ConfigUserValueService>.Instance);
+        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), Mock.Of<IUserDirectory>(), NewUserConfigCache(), NullLogger<ConfigUserValueService>.Instance);
 
         await service.ApplyDefaultsForNewUserAsync(42, actorUserId: 0, CancellationToken.None);
 
@@ -73,7 +76,7 @@ public class ConfigUserValueServiceTests
         var userDirectory = new Mock<IUserDirectory>();
         userDirectory.Setup(d => d.GetAllUserIdsAsync(It.IsAny<CancellationToken>())).ReturnsAsync([1, 2]);
 
-        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), userDirectory.Object, NullLogger<ConfigUserValueService>.Instance);
+        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), userDirectory.Object, NewUserConfigCache(), NullLogger<ConfigUserValueService>.Instance);
 
         await service.ApplyDefaultForNewConfigAsync(config.Id, actorUserId: 0, CancellationToken.None);
 
@@ -97,7 +100,7 @@ public class ConfigUserValueServiceTests
         var userDirectory = new Mock<IUserDirectory>();
         userDirectory.Setup(d => d.GetAllUserIdsAsync(It.IsAny<CancellationToken>())).ReturnsAsync([1, 2]);
 
-        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), userDirectory.Object, NullLogger<ConfigUserValueService>.Instance);
+        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), userDirectory.Object, NewUserConfigCache(), NullLogger<ConfigUserValueService>.Instance);
 
         await service.ApplyDefaultForNewConfigAsync(config.Id, actorUserId: 0, CancellationToken.None);
 
@@ -116,7 +119,7 @@ public class ConfigUserValueServiceTests
 
         var userDirectory = new Mock<IUserDirectory>();
 
-        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), userDirectory.Object, NullLogger<ConfigUserValueService>.Instance);
+        var service = new ConfigUserValueService(repo.Object, Mock.Of<ICurrentUser>(), userDirectory.Object, NewUserConfigCache(), NullLogger<ConfigUserValueService>.Instance);
 
         await service.ApplyDefaultForNewConfigAsync(config.Id, actorUserId: 0, CancellationToken.None);
 
