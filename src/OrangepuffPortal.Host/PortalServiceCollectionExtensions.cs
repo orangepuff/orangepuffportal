@@ -27,9 +27,9 @@ namespace OrangepuffPortal.Host
             services.AddScoped<ICurrentUser, CurrentUser>();
             services.AddScoped<IUserDirectory, UserDirectory>();
 
-            // Distributed cache: Redis when ConnectionStrings:Redis is provided, otherwise an
-            // in-process fallback so development environments without Redis work transparently.
-            var redisConnectionString = configuration.GetConnectionString("Redis");
+            // Distributed cache: Redis when CacheConfigurations:RedisConfiguration:ConnectionString
+            // is provided, otherwise an in-process fallback so environments without Redis still work.
+            var redisConnectionString = configuration["CacheConfigurations:RedisConfiguration:ConnectionString"];
             if (!string.IsNullOrEmpty(redisConnectionString))
             {
                 services.AddStackExchangeRedisCache(options =>
