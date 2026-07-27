@@ -75,6 +75,11 @@ duplicating them per screen.
 **Frontend**: inject `TranslationService` (`portal-frontend/src/lib/translation/`) or use the
 `translate` pipe in templates — `{{ 'admin.config.title' | translate:'OrangepuffPortal.Frontend' }}`.
 Same fallback rule as the backend (falls back to the code itself). The whole culture's text set is
-preloaded once at app bootstrap via `provideAppInitializer()` inside `providePortalShell()` — no
-extra wiring needed in a consuming app. For interpolated messages (e.g. `Delete user "{0}"?`), seed
-the `{0}`-style placeholder text and resolve with `TranslationService.getFormatted(code, module, ...args)`.
+preloaded once at app bootstrap via `provideAppInitializer()` inside `providePortalShell()`, using the
+guest culture `"en-US"` — no signed-in user is known yet at that point. Once `AuthService.checkSession()`
+resolves a user (called by the auth/admin guards, the header, and the landing page), `AuthService`
+switches `TranslationService` over to that user's own `CurrentUser.cultureCode` (`TranslationService.reloadForCulture`,
+a no-op if unchanged) via `identity`.`Users`.`sCultureCode`; `AuthService.logout()` switches it back to
+`"en-US"`. No extra wiring is needed in a consuming app — this all happens inside `AuthService`. For
+interpolated messages (e.g. `Delete user "{0}"?`), seed the `{0}`-style placeholder text and resolve
+with `TranslationService.getFormatted(code, module, ...args)`.

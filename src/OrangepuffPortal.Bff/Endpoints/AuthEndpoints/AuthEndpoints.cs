@@ -80,9 +80,10 @@ namespace OrangepuffPortal.Bff.Endpoints.AuthEndpoints
                 var userId = user.FindFirst(ClaimTypes.NameIdentifier)!.Value;
                 var email = user.FindFirst(ClaimTypes.Email)?.Value;
                 var displayName = user.FindFirst(ClaimTypes.Name)?.Value;
+                var cultureCode = user.FindFirst(PortalClaimTypes.CultureCode)?.Value ?? "en-US";
                 var isAdmin = await client.IsUserAdminAsync(int.Parse(userId), ct);
 
-                return Results.Ok(new MeResponse(userId, email, displayName, isAdmin));
+                return Results.Ok(new MeResponse(userId, email, displayName, isAdmin, cultureCode));
             }).RequireAuthorization();
 
             app.MapGet("/bff/me/permissions", async (ClaimsPrincipal user, IIdentityGateway client, CancellationToken ct) =>
