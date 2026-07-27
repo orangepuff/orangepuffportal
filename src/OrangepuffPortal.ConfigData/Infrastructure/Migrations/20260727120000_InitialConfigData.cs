@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace OrangepuffPortal.ConfigData.Infrastructure.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260727120000_InitialConfigData")]
     public partial class InitialConfigData : Migration
     {
         /// <inheritdoc />
