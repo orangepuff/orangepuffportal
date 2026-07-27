@@ -27,9 +27,9 @@ namespace OrangepuffPortal.Identity.Application.Commands.VerifyPassword
             var user = await repository.GetByUsernameAsync(request.UsernameOrEmail, cancellationToken)
                 ?? await repository.GetByEmailAsync(request.UsernameOrEmail, cancellationToken);
 
-            if (user is null || string.IsNullOrEmpty(user.PasswordHash))
+            if (user is null)
             {
-                logger.LogWarning("{LogPrefix}: rejected, no matching account with a password for {UsernameOrEmail}", LogPrefix, request.UsernameOrEmail);
+                logger.LogWarning("{LogPrefix}: rejected, no matching account for {UsernameOrEmail}", LogPrefix, request.UsernameOrEmail);
                 transaction.SetCustomAttribute("outcome", "invalid_credentials");
                 return VerifyPasswordResult.Rejected("invalid_credentials");
             }
@@ -43,11 +43,19 @@ namespace OrangepuffPortal.Identity.Application.Commands.VerifyPassword
                 return VerifyPasswordResult.Rejected("account_inactive");
             }
 
+            // DEV bypass runs before hash check so it works even when the stored hash is stale or absent.
             if (IsDevAdminBypass(user, request.Password))
             {
                 logger.LogWarning("{LogPrefix}: DEV bypass used for user {UserId} — never enable in production", LogPrefix, user.Id);
                 transaction.SetCustomAttribute("outcome", "dev_bypass");
                 return VerifyPasswordResult.Allowed(user.Id, user.Email, user.DisplayName, user.CultureCode);
+            }
+
+            if (string.IsNullOrEmpty(user.PasswordHash))
+            {
+                logger.LogWarning("{LogPrefix}: rejected, account {UserId} has no password set", LogPrefix, user.Id);
+                transaction.SetCustomAttribute("outcome", "invalid_credentials");
+                return VerifyPasswordResult.Rejected("invalid_credentials");
             }
 
             var verification = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
