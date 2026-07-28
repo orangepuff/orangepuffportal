@@ -5,6 +5,8 @@ namespace OrangepuffPortal.Theme.Contract;
 /// <summary>
 /// Converts a <see cref="ThemeDto"/> into a flat CSS custom-property map.
 /// Variable names follow the pattern <c>--op-{section}-{element}-{property}</c> in kebab-case.
+/// For <c>GlobalColors.Base</c> properties, each value is also emitted as <c>--mat-sys-{property}</c>
+/// so Angular Material components automatically respond to theme changes.
 /// </summary>
 public static class ThemeCssVarBuilder
 {
@@ -31,6 +33,13 @@ public static class ThemeCssVarBuilder
                         : detail.PropertyValue;
 
                     result[varName] = varValue;
+
+                    // Mirror GlobalColors.Base properties as --mat-sys-* tokens so all Angular
+                    // Material components and custom styles using var(--mat-sys-*) pick up the theme.
+                    if (section.SectionCode == "GlobalColors" && element.ElementCode == "Base")
+                    {
+                        result[$"--mat-sys-{ToKebab(detail.PropertyKey)}"] = varValue;
+                    }
                 }
             }
         }

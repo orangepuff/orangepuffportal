@@ -13,37 +13,48 @@ public class ThemeDbSeeder(ThemeDbContext db)
 
     public async Task SeedAsync(CancellationToken ct = default)
     {
-        if (await db.Themes.AnyAsync(x => x.ThemeCode == Domain.Entity.Theme.DefaultThemeCode, ct))
-        {
-            return;
-        }
+        var theme = await db.Themes
+            .FirstOrDefaultAsync(x => x.ThemeCode == Domain.Entity.Theme.DefaultThemeCode, ct);
 
-        var theme = new Domain.Entity.Theme(Domain.Entity.Theme.DefaultThemeCode, "Default light theme for the application", isActive: true, SeedTime);
-        await db.Themes.AddAsync(theme, ct);
-        await db.SaveChangesAsync(ct);
+        if (theme is null)
+        {
+            theme = new Domain.Entity.Theme(Domain.Entity.Theme.DefaultThemeCode, "Default light theme for the application", isActive: true, SeedTime);
+            await db.Themes.AddAsync(theme, ct);
+            await db.SaveChangesAsync(ct);
+        }
 
         await SeedSectionsAsync(theme.Id, ct);
     }
 
     private async Task SeedSectionsAsync(int themeId, CancellationToken ct)
     {
+        var existing = await db.ThemeSections
+            .Where(x => x.ThemeId == themeId)
+            .Select(x => x.SectionCode)
+            .ToHashSetAsync(ct);
+
         var sections = new[]
         {
-            ("Project",       "Manage colors and styles for project-related components",  1),
-            ("Buttons",       "Button styles including primary, secondary and danger",     2),
-            ("Typography",    "Font families, sizes, weights and line heights",            3),
-            ("Navigation",    "Sidebar, top bar and breadcrumb visual settings",          4),
-            ("FormControls",  "Input, select, checkbox, radio and toggle styles",         5),
-            ("DataDisplay",   "Badge, chip, tag and status indicator styles",             6),
-            ("Table",         "Data table, pagination and row styles",                    7),
-            ("DialogPopup",   "Modal dialog and overlay visual settings",                 8),
-            ("AlertFeedback", "Alert, toast and snackbar notification styles",            9),
-            ("Layout",        "Page layout, spacing, container and grid settings",       10),
-            ("Others",        "Miscellaneous component and utility styles",              11),
+            ("GlobalColors",  "Global Material Design color tokens used across all components",   0),
+            ("Project",       "Manage colors and styles for project-related components",           1),
+            ("Buttons",       "Button styles including primary, secondary and danger",             2),
+            ("Typography",    "Font families, sizes, weights and line heights",                    3),
+            ("Navigation",    "Sidebar, top bar and breadcrumb visual settings",                   4),
+            ("FormControls",  "Input, select, checkbox, radio and toggle styles",                  5),
+            ("DataDisplay",   "Badge, chip, tag and status indicator styles",                      6),
+            ("Table",         "Data table, pagination and row styles",                             7),
+            ("DialogPopup",   "Modal dialog and overlay visual settings",                          8),
+            ("AlertFeedback", "Alert, toast and snackbar notification styles",                     9),
+            ("Layout",        "Page layout, spacing, container and grid settings",                10),
+            ("Others",        "Miscellaneous component and utility styles",                       11),
         };
 
         foreach (var (code, desc, sort) in sections)
         {
+            if (existing.Contains(code))
+            {
+                continue;
+            }
             var section = new ThemeSection(themeId, code, desc, sort, SeedTime);
             await db.ThemeSections.AddAsync(section, ct);
             await db.SaveChangesAsync(ct);
@@ -54,6 +65,11 @@ public class ThemeDbSeeder(ThemeDbContext db)
 
     private async Task SeedElementsAsync(int sectionId, string sectionCode, CancellationToken ct)
     {
+        var existing = await db.ThemeElements
+            .Where(x => x.ThemeSectionId == sectionId)
+            .Select(x => x.ElementCode)
+            .ToHashSetAsync(ct);
+
         var elementMap = GetElementMap();
         if (!elementMap.TryGetValue(sectionCode, out var elements))
         {
@@ -62,6 +78,10 @@ public class ThemeDbSeeder(ThemeDbContext db)
 
         foreach (var (code, desc, sort) in elements)
         {
+            if (existing.Contains(code))
+            {
+                continue;
+            }
             var element = new ThemeElement(sectionId, code, desc, sort, SeedTime);
             await db.ThemeElements.AddAsync(element, ct);
             await db.SaveChangesAsync(ct);
@@ -92,6 +112,10 @@ public class ThemeDbSeeder(ThemeDbContext db)
 
     private static Dictionary<string, (string Code, string Desc, int Sort)[]> GetElementMap() => new()
     {
+        ["GlobalColors"] =
+        [
+            ("Base", "Material Design 3 base color roles — emitted as --mat-sys-* tokens", 1),
+        ],
         ["Project"] =
         [
             ("Card",     "Card component",           1),
@@ -171,6 +195,45 @@ public class ThemeDbSeeder(ThemeDbContext db)
 
     private static Dictionary<string, (string Key, string Label, string Desc, string Type, string? Allowed, string? Value, string? Unit, int Sort)[]> GetDetailMap() => new()
     {
+        // GlobalColors.Base properties map 1-to-1 with Material Design 3 color roles.
+        // ThemeCssVarBuilder emits each as both --op-global-colors-base-* and --mat-sys-* so that
+        // Angular Material components and custom styles using var(--mat-sys-*) respond to theme changes.
+        ["GlobalColors.Base"] =
+        [
+            ("primary",                 "Primary",                  "Primary brand color",                       "color", null, "#0EA5E9", null,  1),
+            ("onPrimary",               "On Primary",               "Text/icons on primary color",               "color", null, "#FFFFFF", null,  2),
+            ("primaryContainer",        "Primary Container",        "Tonal primary container",                   "color", null, "#BAE6FD", null,  3),
+            ("onPrimaryContainer",      "On Primary Container",     "Content on primary container",              "color", null, "#0C3F58", null,  4),
+            ("secondary",               "Secondary",                "Secondary accent color",                    "color", null, "#0284C7", null,  5),
+            ("onSecondary",             "On Secondary",             "Text/icons on secondary color",             "color", null, "#FFFFFF", null,  6),
+            ("secondaryContainer",      "Secondary Container",      "Tonal secondary container",                 "color", null, "#E0F2FE", null,  7),
+            ("onSecondaryContainer",    "On Secondary Container",   "Content on secondary container",            "color", null, "#075985", null,  8),
+            ("tertiary",                "Tertiary",                 "Tertiary accent color",                     "color", null, "#0369A1", null,  9),
+            ("onTertiary",              "On Tertiary",              "Text/icons on tertiary color",              "color", null, "#FFFFFF", null, 10),
+            ("tertiaryContainer",       "Tertiary Container",       "Tonal tertiary container",                  "color", null, "#BAE6FD", null, 11),
+            ("onTertiaryContainer",     "On Tertiary Container",    "Content on tertiary container",             "color", null, "#023E58", null, 12),
+            ("error",                   "Error",                    "Error state color",                         "color", null, "#EF4444", null, 13),
+            ("onError",                 "On Error",                 "Text/icons on error color",                 "color", null, "#FFFFFF", null, 14),
+            ("errorContainer",          "Error Container",          "Tonal error container",                     "color", null, "#FEE2E2", null, 15),
+            ("onErrorContainer",        "On Error Container",       "Content on error container",                "color", null, "#991B1B", null, 16),
+            ("surface",                 "Surface",                  "Default surface background",                "color", null, "#FFFFFF", null, 17),
+            ("onSurface",               "On Surface",               "Text/icons on surface",                     "color", null, "#0F172A", null, 18),
+            ("surfaceVariant",          "Surface Variant",          "Alternative surface color",                 "color", null, "#F1F5F9", null, 19),
+            ("onSurfaceVariant",        "On Surface Variant",       "Text/icons on surface variant",             "color", null, "#475569", null, 20),
+            ("outline",                 "Outline",                  "Border and divider color",                  "color", null, "#CBD5E1", null, 21),
+            ("outlineVariant",          "Outline Variant",          "Subtle border and divider color",           "color", null, "#E2E8F0", null, 22),
+            ("surfaceContainerLowest",  "Surface Container Lowest", "Lowest surface container tone",             "color", null, "#FFFFFF", null, 23),
+            ("surfaceContainerLow",     "Surface Container Low",    "Low surface container tone",                "color", null, "#F8FAFC", null, 24),
+            ("surfaceContainer",        "Surface Container",        "Mid surface container tone",                "color", null, "#F1F5F9", null, 25),
+            ("surfaceContainerHigh",    "Surface Container High",   "High surface container tone",               "color", null, "#E8EEF5", null, 26),
+            ("surfaceContainerHighest", "Surface Container Highest","Highest surface container tone",            "color", null, "#DDE7F0", null, 27),
+            ("background",              "Background",               "Page background color",                     "color", null, "#F8FAFC", null, 28),
+            ("onBackground",            "On Background",            "Text/icons on page background",             "color", null, "#374151", null, 29),
+            ("inverseSurface",          "Inverse Surface",          "Dark surface for contrasting elements",     "color", null, "#1E293B", null, 30),
+            ("inverseOnSurface",        "Inverse On Surface",       "Content on inverse surface",                "color", null, "#F1F5F9", null, 31),
+            ("inversePrimary",          "Inverse Primary",          "Primary color on dark surfaces",            "color", null, "#7DD3FC", null, 32),
+            ("scrim",                   "Scrim",                    "Modal overlay scrim color",                 "color", null, "#000000", null, 33),
+        ],
         ["Project.Card"] =
         [
             ("backgroundColor",  "Background Color",  "Background color of card",      "color",       null,          "#FFFFFF", null, 1),
