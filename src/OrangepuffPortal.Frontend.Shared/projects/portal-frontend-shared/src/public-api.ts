@@ -15,6 +15,10 @@ export * from './lib/button/button';
 
 export * from './lib/text-input/text-input';
 
+export * from './lib/number-input/number-input';
+
+export * from './lib/checkbox/checkbox';
+
 export * from './lib/file-input/file-input';
 
 export * from './lib/slider/slider';
