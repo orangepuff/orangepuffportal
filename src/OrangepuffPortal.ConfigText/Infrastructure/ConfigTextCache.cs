@@ -7,8 +7,7 @@ using System.Text.Json;
 namespace OrangepuffPortal.ConfigText.Infrastructure;
 
 /// <summary>
-/// Thin serializable projection of <see cref="ConfigTextDefinition"/> used for Redis serialization —
-/// holds only the fields that <see cref="ConfigTextReader"/> needs after a cache hit.
+/// Thin serializable projection of <see cref="ConfigTextDefinition"/> used for Redis serialization — holds only the fields that <see cref="ConfigTextReader"/> needs after a cache hit.
 /// </summary>
 internal record ConfigTextCacheRow(string Module, string TextCode, string CultureCode, string TextType, string Text);
 
@@ -26,11 +25,9 @@ internal record ConfigTextCacheRow(string Module, string TextCode, string Cultur
 /// </remarks>
 internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTextCache> logger)
 {
-    private static readonly DistributedCacheEntryOptions EntryOptions =
-        new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24) };
+    private static readonly DistributedCacheEntryOptions EntryOptions = new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24) };
 
-    private readonly ConcurrentDictionary<string, bool> _loadedCultures =
-        new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, bool> _loadedCultures = new(StringComparer.OrdinalIgnoreCase);
 
     public async Task<IReadOnlyList<ConfigTextCacheRow>> GetOrCreateAsync(
         string cultureCode,
@@ -44,6 +41,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
             var bytes = await cache.GetAsync(CacheKey(cultureCode), cancellationToken);
             if (bytes is not null)
             {
+                logger.LogDebug("{LogPrefix}: cache hit for culture '{Culture}'", LogPrefix, cultureCode);
                 return JsonSerializer.Deserialize<List<ConfigTextCacheRow>>(bytes)!;
             }
         }
@@ -52,6 +50,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
             logger.LogWarning("{LogPrefix}: cache read failed for culture '{Culture}' — {ExceptionType}: {Message}", LogPrefix, cultureCode, ex.GetType().Name, ex.Message);
         }
 
+        logger.LogDebug("{LogPrefix}: cache miss for culture '{Culture}', fetching from DB", LogPrefix, cultureCode);
         var rows = await factory();
 
         try
@@ -88,6 +87,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
         try
         {
             await cache.RemoveAsync(key, cancellationToken);
+            logger.LogDebug("{LogPrefix}: removed cache key '{Key}'", logPrefix, key);
         }
         catch (Exception ex)
         {
