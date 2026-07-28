@@ -15,6 +15,7 @@ internal class ConfigTextWriter(IConfigTextRepository repository, ConfigTextCach
     public async Task UpsertManyAsync(string cultureCode, IReadOnlyCollection<ConfigTextSeedEntry> entries, CancellationToken cancellationToken = default)
     {
         const string LogPrefix = nameof(ConfigTextWriter) + "." + nameof(UpsertManyAsync);
+        logger.LogInformation("{LogPrefix}: seeding {Count} entries for culture '{Culture}'", LogPrefix, entries.Count, cultureCode);
 
         if (string.IsNullOrWhiteSpace(cultureCode) || cultureCode == ConfigTextDefinition.WildcardCulture)
         {
