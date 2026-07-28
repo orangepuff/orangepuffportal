@@ -32,6 +32,8 @@ internal sealed class UserConfigCache(IMemoryCache memoryCache, IDistributedCach
 
     public bool TryGet(int userId, out IReadOnlyList<ConfigUserValueDto> values)
     {
+        const string LogPrefix = nameof(UserConfigCache) + "." + nameof(TryGet);
+
         if (memoryCache.TryGetValue(CacheKey(userId), out values!))
         {
             return true;
@@ -51,8 +53,7 @@ internal sealed class UserConfigCache(IMemoryCache memoryCache, IDistributedCach
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: L2 cache read failed — {ExceptionType}: {Message}",
-                nameof(UserConfigCache) + "." + nameof(TryGet), ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: L2 cache read failed for user {UserId} — {ExceptionType}: {Message}", LogPrefix, userId, ex.GetType().Name, ex.Message);
         }
 
         values = [];
@@ -61,35 +62,35 @@ internal sealed class UserConfigCache(IMemoryCache memoryCache, IDistributedCach
 
     public async Task SetAsync(int userId, IReadOnlyList<ConfigUserValueDto> values, CancellationToken cancellationToken = default)
     {
+        const string LogPrefix = nameof(UserConfigCache) + "." + nameof(SetAsync);
+
         memoryCache.Set(CacheKey(userId), values, MemoryOptions);
 
         try
         {
-            await distributedCache.SetAsync(
-                CacheKey(userId),
-                JsonSerializer.SerializeToUtf8Bytes(values),
-                RedisOptions,
-                cancellationToken);
+            await distributedCache.SetAsync(CacheKey(userId), JsonSerializer.SerializeToUtf8Bytes(values), RedisOptions, cancellationToken);
+            logger.LogDebug("{LogPrefix}: cached {Count} config value(s) for user {UserId}", LogPrefix, values.Count, userId);
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: L2 cache write failed — {ExceptionType}: {Message}",
-                nameof(UserConfigCache) + "." + nameof(SetAsync), ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: L2 cache write failed for user {UserId} — {ExceptionType}: {Message}", LogPrefix, userId, ex.GetType().Name, ex.Message);
         }
     }
 
     public async Task InvalidateAsync(int userId, CancellationToken cancellationToken = default)
     {
+        const string LogPrefix = nameof(UserConfigCache) + "." + nameof(InvalidateAsync);
+
         memoryCache.Remove(CacheKey(userId));
 
         try
         {
             await distributedCache.RemoveAsync(CacheKey(userId), cancellationToken);
+            logger.LogDebug("{LogPrefix}: invalidated cache for user {UserId}", LogPrefix, userId);
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: L2 cache invalidation failed — {ExceptionType}: {Message}",
-                nameof(UserConfigCache) + "." + nameof(InvalidateAsync), ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: L2 cache invalidation failed for user {UserId} — {ExceptionType}: {Message}", LogPrefix, userId, ex.GetType().Name, ex.Message);
         }
     }
 

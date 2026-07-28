@@ -24,6 +24,7 @@ internal sealed class ConfigDataCache(IDistributedCache distributedCache, ILogge
 
     public async Task<IReadOnlyList<ConfigDataCacheRow>?> GetAsync(CancellationToken cancellationToken = default)
     {
+        const string LogPrefix = nameof(ConfigDataCache) + "." + nameof(GetAsync);
         try
         {
             var bytes = await distributedCache.GetAsync(CacheKey, cancellationToken);
@@ -31,35 +32,36 @@ internal sealed class ConfigDataCache(IDistributedCache distributedCache, ILogge
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: cache read failed — {ExceptionType}: {Message}",
-                nameof(ConfigDataCache) + "." + nameof(GetAsync), ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: cache read failed — {ExceptionType}: {Message}", LogPrefix, ex.GetType().Name, ex.Message);
             return null;
         }
     }
 
     public async Task SetAllAsync(IReadOnlyList<ConfigDataCacheRow> rows, CancellationToken cancellationToken = default)
     {
+        const string LogPrefix = nameof(ConfigDataCache) + "." + nameof(SetAllAsync);
         try
         {
             await distributedCache.SetAsync(CacheKey, JsonSerializer.SerializeToUtf8Bytes(rows), EntryOptions, cancellationToken);
+            logger.LogDebug("{LogPrefix}: cached {Count} entries", LogPrefix, rows.Count);
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: cache write failed — {ExceptionType}: {Message}",
-                nameof(ConfigDataCache) + "." + nameof(SetAllAsync), ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: cache write failed — {ExceptionType}: {Message}", LogPrefix, ex.GetType().Name, ex.Message);
         }
     }
 
     public async Task InvalidateAsync(CancellationToken cancellationToken = default)
     {
+        const string LogPrefix = nameof(ConfigDataCache) + "." + nameof(InvalidateAsync);
         try
         {
             await distributedCache.RemoveAsync(CacheKey, cancellationToken);
+            logger.LogDebug("{LogPrefix}: cache invalidated", LogPrefix);
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: cache invalidation failed — {ExceptionType}: {Message}",
-                nameof(ConfigDataCache) + "." + nameof(InvalidateAsync), ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: cache invalidation failed — {ExceptionType}: {Message}", LogPrefix, ex.GetType().Name, ex.Message);
         }
     }
 }

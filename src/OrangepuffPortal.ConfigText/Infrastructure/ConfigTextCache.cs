@@ -37,6 +37,8 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
         Func<Task<IReadOnlyList<ConfigTextCacheRow>>> factory,
         CancellationToken cancellationToken = default)
     {
+        const string LogPrefix = nameof(ConfigTextCache) + "." + nameof(GetOrCreateAsync);
+
         try
         {
             var bytes = await cache.GetAsync(CacheKey(cultureCode), cancellationToken);
@@ -47,8 +49,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: cache read failed — {ExceptionType}: {Message}",
-                nameof(ConfigTextCache) + "." + nameof(GetOrCreateAsync), ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: cache read failed for culture '{Culture}' — {ExceptionType}: {Message}", LogPrefix, cultureCode, ex.GetType().Name, ex.Message);
         }
 
         var rows = await factory();
@@ -57,11 +58,11 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
         {
             await cache.SetAsync(CacheKey(cultureCode), JsonSerializer.SerializeToUtf8Bytes(rows), EntryOptions, cancellationToken);
             _loadedCultures.TryAdd(cultureCode, true);
+            logger.LogDebug("{LogPrefix}: cached {Count} entries for culture '{Culture}'", LogPrefix, rows.Count, cultureCode);
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: cache write failed — {ExceptionType}: {Message}",
-                nameof(ConfigTextCache) + "." + nameof(GetOrCreateAsync), ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: cache write failed for culture '{Culture}' — {ExceptionType}: {Message}", LogPrefix, cultureCode, ex.GetType().Name, ex.Message);
         }
 
         return rows;
@@ -69,17 +70,20 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
 
     public async Task InvalidateAsync(CancellationToken cancellationToken = default)
     {
+        const string LogPrefix = nameof(ConfigTextCache) + "." + nameof(InvalidateAsync);
+
         var cultures = _loadedCultures.Keys.ToArray();
         _loadedCultures.Clear();
 
         var tasks = cultures
-            .Select(c => RemoveSafeAsync(CacheKey(c), cancellationToken))
-            .Append(RemoveSafeAsync(CacheKey(ConfigTextDefinition.WildcardCulture), cancellationToken));
+            .Select(c => RemoveSafeAsync(LogPrefix, CacheKey(c), cancellationToken))
+            .Append(RemoveSafeAsync(LogPrefix, CacheKey(ConfigTextDefinition.WildcardCulture), cancellationToken));
 
         await Task.WhenAll(tasks);
+        logger.LogDebug("{LogPrefix}: invalidated {Count} culture cache(s)", LogPrefix, cultures.Length);
     }
 
-    private async Task RemoveSafeAsync(string key, CancellationToken cancellationToken)
+    private async Task RemoveSafeAsync(string logPrefix, string key, CancellationToken cancellationToken)
     {
         try
         {
@@ -87,8 +91,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
         }
         catch (Exception ex)
         {
-            logger.LogWarning("{LogPrefix}: cache invalidation failed for key '{Key}' — {ExceptionType}: {Message}",
-                nameof(ConfigTextCache) + "." + nameof(InvalidateAsync), key, ex.GetType().Name, ex.Message);
+            logger.LogWarning("{LogPrefix}: cache invalidation failed for key '{Key}' — {ExceptionType}: {Message}", logPrefix, key, ex.GetType().Name, ex.Message);
         }
     }
 
