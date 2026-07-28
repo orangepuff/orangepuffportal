@@ -35,6 +35,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
         CancellationToken cancellationToken = default)
     {
         const string LogPrefix = nameof(ConfigTextCache) + "." + nameof(GetOrCreateAsync);
+        logger.LogDebug("{LogPrefix}: resolving cache for culture '{Culture}'", LogPrefix, cultureCode);
 
         try
         {
@@ -70,6 +71,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
     public async Task InvalidateAsync(CancellationToken cancellationToken = default)
     {
         const string LogPrefix = nameof(ConfigTextCache) + "." + nameof(InvalidateAsync);
+        logger.LogDebug("{LogPrefix}: invalidating all culture caches", LogPrefix);
 
         var cultures = _loadedCultures.Keys.ToArray();
         _loadedCultures.Clear();
