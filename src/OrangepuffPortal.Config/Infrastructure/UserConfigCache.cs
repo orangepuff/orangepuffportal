@@ -69,7 +69,7 @@ internal sealed class UserConfigCache(IMemoryCache memoryCache, IDistributedCach
         try
         {
             await distributedCache.SetAsync(CacheKey(userId), JsonSerializer.SerializeToUtf8Bytes(values), RedisOptions, cancellationToken);
-            logger.LogDebug("{LogPrefix}: cached {Count} config value(s) for user {UserId}", LogPrefix, values.Count, userId);
+            logger.LogInformation("{LogPrefix}: cached {Count} config value(s) for user {UserId}", LogPrefix, values.Count, userId);
         }
         catch (Exception ex)
         {
@@ -86,7 +86,7 @@ internal sealed class UserConfigCache(IMemoryCache memoryCache, IDistributedCach
         try
         {
             await distributedCache.RemoveAsync(CacheKey(userId), cancellationToken);
-            logger.LogDebug("{LogPrefix}: invalidated cache for user {UserId}", LogPrefix, userId);
+            logger.LogInformation("{LogPrefix}: invalidated cache for user {UserId}", LogPrefix, userId);
         }
         catch (Exception ex)
         {

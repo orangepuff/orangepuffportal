@@ -43,7 +43,7 @@ internal sealed class ConfigDataCache(IDistributedCache distributedCache, ILogge
         try
         {
             await distributedCache.SetAsync(CacheKey, JsonSerializer.SerializeToUtf8Bytes(rows), EntryOptions, cancellationToken);
-            logger.LogDebug("{LogPrefix}: cached {Count} entries", LogPrefix, rows.Count);
+            logger.LogInformation("{LogPrefix}: cached {Count} entries", LogPrefix, rows.Count);
         }
         catch (Exception ex)
         {
@@ -57,7 +57,7 @@ internal sealed class ConfigDataCache(IDistributedCache distributedCache, ILogge
         try
         {
             await distributedCache.RemoveAsync(CacheKey, cancellationToken);
-            logger.LogDebug("{LogPrefix}: cache invalidated", LogPrefix);
+            logger.LogInformation("{LogPrefix}: cache invalidated", LogPrefix);
         }
         catch (Exception ex)
         {

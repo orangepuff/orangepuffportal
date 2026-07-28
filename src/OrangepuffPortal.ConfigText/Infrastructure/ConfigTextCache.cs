@@ -35,14 +35,14 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
         CancellationToken cancellationToken = default)
     {
         const string LogPrefix = nameof(ConfigTextCache) + "." + nameof(GetOrCreateAsync);
-        logger.LogDebug("{LogPrefix}: resolving cache for culture '{Culture}'", LogPrefix, cultureCode);
+        logger.LogInformation("{LogPrefix}: resolving cache for culture '{Culture}'", LogPrefix, cultureCode);
 
         try
         {
             var bytes = await cache.GetAsync(CacheKey(cultureCode), cancellationToken);
             if (bytes is not null)
             {
-                logger.LogDebug("{LogPrefix}: cache hit for culture '{Culture}'", LogPrefix, cultureCode);
+                logger.LogInformation("{LogPrefix}: cache hit for culture '{Culture}'", LogPrefix, cultureCode);
                 return JsonSerializer.Deserialize<List<ConfigTextCacheRow>>(bytes)!;
             }
         }
@@ -51,14 +51,14 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
             logger.LogWarning("{LogPrefix}: cache read failed for culture '{Culture}' — {ExceptionType}: {Message}", LogPrefix, cultureCode, ex.GetType().Name, ex.Message);
         }
 
-        logger.LogDebug("{LogPrefix}: cache miss for culture '{Culture}', fetching from DB", LogPrefix, cultureCode);
+        logger.LogInformation("{LogPrefix}: cache miss for culture '{Culture}', fetching from DB", LogPrefix, cultureCode);
         var rows = await factory();
 
         try
         {
             await cache.SetAsync(CacheKey(cultureCode), JsonSerializer.SerializeToUtf8Bytes(rows), EntryOptions, cancellationToken);
             _loadedCultures.TryAdd(cultureCode, true);
-            logger.LogDebug("{LogPrefix}: cached {Count} entries for culture '{Culture}'", LogPrefix, rows.Count, cultureCode);
+            logger.LogInformation("{LogPrefix}: cached {Count} entries for culture '{Culture}'", LogPrefix, rows.Count, cultureCode);
         }
         catch (Exception ex)
         {
@@ -71,7 +71,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
     public async Task InvalidateAsync(CancellationToken cancellationToken = default)
     {
         const string LogPrefix = nameof(ConfigTextCache) + "." + nameof(InvalidateAsync);
-        logger.LogDebug("{LogPrefix}: invalidating all culture caches", LogPrefix);
+        logger.LogInformation("{LogPrefix}: invalidating all culture caches", LogPrefix);
 
         var cultures = _loadedCultures.Keys.ToArray();
         _loadedCultures.Clear();
@@ -81,7 +81,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
             .Append(RemoveSafeAsync(LogPrefix, CacheKey(ConfigTextDefinition.WildcardCulture), cancellationToken));
 
         await Task.WhenAll(tasks);
-        logger.LogDebug("{LogPrefix}: invalidated {Count} culture cache(s)", LogPrefix, cultures.Length);
+        logger.LogInformation("{LogPrefix}: invalidated {Count} culture cache(s)", LogPrefix, cultures.Length);
     }
 
     private async Task RemoveSafeAsync(string logPrefix, string key, CancellationToken cancellationToken)
@@ -89,7 +89,7 @@ internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTex
         try
         {
             await cache.RemoveAsync(key, cancellationToken);
-            logger.LogDebug("{LogPrefix}: removed cache key '{Key}'", logPrefix, key);
+            logger.LogInformation("{LogPrefix}: removed cache key '{Key}'", logPrefix, key);
         }
         catch (Exception ex)
         {
