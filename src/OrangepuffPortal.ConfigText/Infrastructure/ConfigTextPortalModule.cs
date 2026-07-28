@@ -12,6 +12,5 @@ internal sealed class ConfigTextPortalModule : IPortalModule
 {
     public string Name => "ConfigText";
 
-    public async Task MigrateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) =>
-        await serviceProvider.GetRequiredService<ConfigTextDbContext>().Database.MigrateAsync(cancellationToken);
+    public async Task MigrateAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) => await serviceProvider.GetRequiredService<ConfigTextDbContext>().Database.MigrateAsync(cancellationToken);
 }
