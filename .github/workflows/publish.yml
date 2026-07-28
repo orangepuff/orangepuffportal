@@ -54,6 +54,8 @@ jobs:
             src/OrangepuffPortal.ConfigData.Contract/OrangepuffPortal.ConfigData.Contract.csproj \
             src/OrangepuffPortal.ConfigData/OrangepuffPortal.ConfigData.csproj \
             src/OrangepuffPortal.Bff/OrangepuffPortal.Bff.csproj \
+            src/OrangepuffPortal.Theme.Contract/OrangepuffPortal.Theme.Contract.csproj \
+            src/OrangepuffPortal.Theme/OrangepuffPortal.Theme.csproj \
             src/OrangepuffPortal.Host/OrangepuffPortal.Host.csproj ; do
             dotnet pack "$proj" -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           done

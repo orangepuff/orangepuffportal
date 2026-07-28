@@ -296,6 +296,12 @@ namespace OrangepuffPortal.Identity.Infrastructure.Migrations
                         .HasColumnType("nvarchar(256)")
                         .HasColumnName("sPasswordHash");
 
+                    b.Property<int>("ThemeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("iThemeId");
+
                     b.Property<DateTime?>("UpdatedTime")
                         .HasColumnType("datetime2(3)")
                         .HasColumnName("dtUpdatedTime");

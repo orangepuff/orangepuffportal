@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OrangepuffPortal.Theme\OrangepuffPortal.Theme.csproj" />
     <ProjectReference Include="..\OrangepuffPortal.Bff\OrangepuffPortal.Bff.csproj" />
     <ProjectReference Include="..\OrangepuffPortal.Config\OrangepuffPortal.Config.csproj" />
     <ProjectReference Include="..\OrangepuffPortal.ConfigData\OrangepuffPortal.ConfigData.csproj" />

@@ -23,6 +23,28 @@
     </mat-card-content>
   </mat-card>
 
+  @if (isOwnSettings()) {
+    <mat-card class="settings-page__card">
+      <mat-card-header>
+        <mat-card-title>Theme</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="settings-page__theme">
+        <mat-form-field appearance="outline" class="settings-page__field">
+          <mat-label>Theme</mat-label>
+          <mat-select [value]="selectedThemeId()" (selectionChange)="changeTheme($event.value)" [disabled]="savingTheme()">
+            <mat-option [value]="0">Default</mat-option>
+            @for (t of availableThemes(); track t.id) {
+              <mat-option [value]="t.id">{{ t.description }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        @if (savingTheme()) {
+          <mat-spinner diameter="20" />
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
   @if (isAdmin() && targetUser(); as user) {
     <mat-card class="settings-page__card">
       <mat-card-header>

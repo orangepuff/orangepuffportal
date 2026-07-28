@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { CurrentUser, IdentityService } from '@orangepuff/portal-frontend-shared';
-import { tap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { PORTAL_SHELL_CONFIG } from '../config/portal-shell-config';
+import { ThemeApplyService } from '../theme/theme-apply.service';
 import { TranslationService } from '../translation/translation.service';
 
 const GUEST_CULTURE_CODE = 'en-US';
@@ -23,12 +24,21 @@ export class AuthService {
   private readonly config = inject(PORTAL_SHELL_CONFIG);
   private readonly translationService = inject(TranslationService);
 
+  private readonly themeApplyService = inject(ThemeApplyService);
+
   readonly currentUser = this.identityService.currentUser;
   readonly isAuthenticated = this.identityService.isAuthenticated;
   readonly checked = this.identityService.checked;
 
-  checkSession() {
-    return this.identityService.checkSession().pipe(tap((user) => this.syncTranslationCulture(user)));
+  checkSession(): Observable<CurrentUser | null> {
+    return this.identityService.checkSession().pipe(
+      tap(user => this.syncTranslationCulture(user)),
+      switchMap(user =>
+        user
+          ? this.themeApplyService.load().pipe(map(() => user))
+          : of(user)
+      )
+    );
   }
 
   passwordSignIn(usernameOrEmail: string, password: string) {
@@ -45,7 +55,12 @@ export class AuthService {
   }
 
   logout() {
-    return this.identityService.logout().pipe(tap(() => this.translationService.reloadForCulture(GUEST_CULTURE_CODE)));
+    return this.identityService.logout().pipe(
+      tap(() => {
+        this.translationService.reloadForCulture(GUEST_CULTURE_CODE);
+        this.themeApplyService.clear();
+      })
+    );
   }
 
   private syncTranslationCulture(user: CurrentUser | null): void {

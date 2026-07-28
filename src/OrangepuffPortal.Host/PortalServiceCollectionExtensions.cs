@@ -8,11 +8,13 @@ using OrangepuffPortal.Bff;
 using OrangepuffPortal.Config.Infrastructure;
 using OrangepuffPortal.ConfigData.Infrastructure;
 using OrangepuffPortal.ConfigText.Infrastructure;
+using OrangepuffPortal.Theme.Infrastructure;
 using OrangepuffPortal.Host.ConfigText;
 using OrangepuffPortal.Host.Infrastructure;
 using OrangepuffPortal.Identity.Infrastructure;
 using OrangepuffPortal.Shared.Auditing;
 using OrangepuffPortal.Shared.Modules;
+using OrangepuffPortal.Theme.Contract.Interfaces;
 
 namespace OrangepuffPortal.Host
 {
@@ -27,6 +29,7 @@ namespace OrangepuffPortal.Host
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUser, CurrentUser>();
             services.AddScoped<IUserDirectory, UserDirectory>();
+            services.AddScoped<IUserThemeSelector, UserThemeSelector>();
 
             // Distributed cache: Redis when CacheConfigurations:RedisConfiguration:ConnectionString
             // is provided, otherwise an in-process fallback so environments without Redis still work.
@@ -54,6 +57,7 @@ namespace OrangepuffPortal.Host
             services.AddConfigTextModule(configuration);
             services.AddConfigModule(configuration);
             services.AddConfigDataModule(configuration);
+            services.AddThemeModule(configuration);
             services.AddPortalBff(configuration);
 
             // Runs through the same MigratePortalModulesAsync() pipeline as every other IPortalModule —

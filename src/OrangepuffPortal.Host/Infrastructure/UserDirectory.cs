@@ -20,4 +20,15 @@ public class UserDirectory(UserDbContext db, ILogger<UserDirectory> logger) : IU
         logger.LogDebug("{LogPrefix}: read {Count} user id(s)", LogPrefix, userIds.Count);
         return userIds;
     }
+
+    public async Task<int> GetUserThemeIdAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        const string LogPrefix = nameof(UserDirectory) + "." + nameof(GetUserThemeIdAsync);
+        var themeId = await db.Users.AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => u.ThemeId)
+            .FirstOrDefaultAsync(cancellationToken);
+        logger.LogDebug("{LogPrefix}: user {UserId} has iThemeId={ThemeId}", LogPrefix, userId, themeId);
+        return themeId;
+    }
 }
