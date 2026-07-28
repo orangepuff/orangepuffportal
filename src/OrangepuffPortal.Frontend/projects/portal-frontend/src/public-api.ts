@@ -34,3 +34,5 @@ export * from './lib/admin/security-rule-items/security-rule-item-list/security-
 export * from './lib/admin/security-rule-items/security-rule-item-form-dialog/security-rule-item-form-dialog';
 
 export * from './lib/admin/themes/theme-page';
+
+export * from './lib/theme/theme-apply.service';

@@ -18,6 +18,9 @@ public class ThemeRepository(ThemeDbContext db) : IThemeRepository
     public Task<bool> ExistsByCodeAsync(string themeCode, int? excludeId, CancellationToken cancellationToken = default) =>
         db.Themes.AnyAsync(x => x.ThemeCode == themeCode && x.Id != (excludeId ?? -1), cancellationToken);
 
+    public Task<bool> ExistsAsync(int themeId, CancellationToken cancellationToken = default) =>
+        db.Themes.AnyAsync(x => x.Id == themeId, cancellationToken);
+
     public async Task<IReadOnlyList<ThemeSection>> ListSectionsAsync(int themeId, CancellationToken cancellationToken = default) =>
         await db.ThemeSections.AsNoTracking()
             .Where(x => x.ThemeId == themeId)

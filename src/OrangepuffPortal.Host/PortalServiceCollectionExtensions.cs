@@ -14,6 +14,7 @@ using OrangepuffPortal.Host.Infrastructure;
 using OrangepuffPortal.Identity.Infrastructure;
 using OrangepuffPortal.Shared.Auditing;
 using OrangepuffPortal.Shared.Modules;
+using OrangepuffPortal.Theme.Contract.Interfaces;
 
 namespace OrangepuffPortal.Host
 {
@@ -28,6 +29,7 @@ namespace OrangepuffPortal.Host
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUser, CurrentUser>();
             services.AddScoped<IUserDirectory, UserDirectory>();
+            services.AddScoped<IUserThemeSelector, UserThemeSelector>();
 
             // Distributed cache: Redis when CacheConfigurations:RedisConfiguration:ConnectionString
             // is provided, otherwise an in-process fallback so environments without Redis still work.

@@ -9,6 +9,7 @@ using OrangepuffPortal.Bff.Endpoints.ConfigTextEndpoints;
 using OrangepuffPortal.Bff.Endpoints.SecurityRuleCategoryAdminEndpoints;
 using OrangepuffPortal.Bff.Endpoints.SecurityRuleItemAdminEndpoints;
 using OrangepuffPortal.Bff.Endpoints.ThemeAdminEndpoints;
+using OrangepuffPortal.Bff.Endpoints.ThemeUserEndpoints;
 using OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints;
 using OrangepuffPortal.Bff.Infrastructure;
 
@@ -22,6 +23,7 @@ namespace OrangepuffPortal.Bff
         public static WebApplication MapPortalBffEndpoints(this WebApplication app)
         {
             app.MapAuthEndpoints();
+            app.MapThemeUserEndpoints();
             app.MapAvatarEndpoints();
             app.MapConfigEndpoints();
             app.MapConfigTextEndpoints();

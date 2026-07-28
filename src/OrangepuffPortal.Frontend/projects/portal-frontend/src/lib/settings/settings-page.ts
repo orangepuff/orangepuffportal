@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin, of, switchMap, map } from 'rxjs';
 import { FormControl, FormGroup, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,6 +16,7 @@ import { UserSettingsService } from './user-settings.service';
 import { ConfigSettingsService, ConfigValueInput, ConfigValueType, UserConfigItem, UserConfigSection } from './config-settings.service';
 import { UserAdminService } from '../admin/users/user-admin.service';
 import { User } from '../admin/users/user';
+import { ActiveTheme, ThemeApplyService } from '../theme/theme-apply.service';
 import { TranslatePipe } from '../translation/translate.pipe';
 import { TranslationService } from '../translation/translation.service';
 
@@ -22,7 +24,7 @@ const MODULE = 'OrangepuffPortal.Frontend';
 
 @Component({
   selector: 'lib-portal-settings-page',
-  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, MatSelectModule, ReactiveFormsModule, TranslatePipe],
+  imports: [Avatar, MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule, MatSelectModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss'
 })
@@ -35,10 +37,14 @@ export class SettingsPage {
   private readonly userSettingsService = inject(UserSettingsService);
   private readonly configSettingsService = inject(ConfigSettingsService);
   private readonly userAdminService = inject(UserAdminService);
+  private readonly themeApplyService = inject(ThemeApplyService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translationService = inject(TranslationService);
 
   protected readonly avatarVersion = signal(0);
+  protected readonly availableThemes = signal<ActiveTheme[]>([]);
+  protected readonly selectedThemeId = computed(() => this.themeApplyService.currentTheme()?.id ?? 0);
+  protected readonly savingTheme = signal(false);
 
   /** Reactive to param changes (not just `.snapshot`) since the guard lets the router reuse this component across /Users/:userId/Settings navigations. */
   protected readonly targetUserId = toSignal(
@@ -85,6 +91,8 @@ export class SettingsPage {
   });
 
   constructor() {
+    this.themeApplyService.listActiveThemes().subscribe(t => this.availableThemes.set(t));
+
     // Rebuild one control per config whenever the loaded sections change (userId navigation, or a reload) — disabled up front for a normal user so they truly cannot submit an edit, not just visually greyed out.
     effect(() => {
       const sections = this.sections();
@@ -125,6 +133,20 @@ export class SettingsPage {
           });
         }
       });
+    });
+  }
+
+  protected changeTheme(themeId: number): void {
+    this.savingTheme.set(true);
+    this.themeApplyService.setTheme(themeId).subscribe({
+      next: () => {
+        this.savingTheme.set(false);
+        this.snackBar.open('Theme updated.', this.dismissLabel(), { duration: 3000 });
+      },
+      error: () => {
+        this.savingTheme.set(false);
+        this.snackBar.open('Failed to change theme.', this.dismissLabel(), { duration: 3000 });
+      }
     });
   }
 

@@ -8,6 +8,7 @@ public interface IThemeRepository
     Task<Entity.Theme?> FindByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<Entity.Theme?> FindByCodeAsync(string themeCode, CancellationToken cancellationToken = default);
     Task<bool> ExistsByCodeAsync(string themeCode, int? excludeId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(int themeId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ThemeSection>> ListSectionsAsync(int themeId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ThemeElement>> ListElementsAsync(int themeSectionId, CancellationToken cancellationToken = default);

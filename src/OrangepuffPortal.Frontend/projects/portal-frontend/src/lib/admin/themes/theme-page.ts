@@ -14,6 +14,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ConfirmDialog, ConfirmDialogData } from '@orangepuff/portal-frontend-shared';
 import { ThemeAdminService } from './theme-admin.service';
 import { ThemeDetail, ThemeElement, ThemeFull, ThemeItem, ThemeSection } from './theme-models';
+import { ThemeApplyService } from '../../theme/theme-apply.service';
 import { TranslatePipe } from '../../translation/translate.pipe';
 import { TranslationService } from '../../translation/translation.service';
 
@@ -40,6 +41,7 @@ const SNACK_MS = 3000;
 })
 export class ThemePage implements OnInit {
   private readonly service = inject(ThemeAdminService);
+  private readonly themeApplyService = inject(ThemeApplyService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly translationService = inject(TranslationService);
@@ -160,6 +162,8 @@ export class ThemePage implements OnInit {
       next: () => {
         this.saving.set(false);
         this.snackBar.open('Changes saved.', undefined, { duration: SNACK_MS });
+        // Re-apply CSS vars so the change is visible immediately if this is the user's active theme.
+        this.themeApplyService.load().subscribe();
       },
       error: () => {
         this.saving.set(false);
