@@ -9,4 +9,9 @@ namespace OrangepuffPortal.Shared.Auditing;
 public interface IUserDirectory
 {
     Task<IReadOnlyList<int>> GetAllUserIdsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the <c>iThemeId</c> stored on a user row (0 = no selection → callers resolve to Default).
+    /// </summary>
+    Task<int> GetUserThemeIdAsync(int userId, CancellationToken cancellationToken = default);
 }

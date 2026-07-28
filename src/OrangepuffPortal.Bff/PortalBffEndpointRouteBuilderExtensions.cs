@@ -8,6 +8,7 @@ using OrangepuffPortal.Bff.Endpoints.ConfigTextAdminEndpoints;
 using OrangepuffPortal.Bff.Endpoints.ConfigTextEndpoints;
 using OrangepuffPortal.Bff.Endpoints.SecurityRuleCategoryAdminEndpoints;
 using OrangepuffPortal.Bff.Endpoints.SecurityRuleItemAdminEndpoints;
+using OrangepuffPortal.Bff.Endpoints.ThemeAdminEndpoints;
 using OrangepuffPortal.Bff.Endpoints.UserAdminEndpoints;
 using OrangepuffPortal.Bff.Infrastructure;
 
@@ -33,6 +34,7 @@ namespace OrangepuffPortal.Bff
             adminGroup.MapConfigTextAdminEndpoints();
             adminGroup.MapConfigDataAdminEndpoints();
             adminGroup.MapAvatarAdminEndpoints();
+            adminGroup.MapThemeAdminEndpoints();
 
             return app;
         }

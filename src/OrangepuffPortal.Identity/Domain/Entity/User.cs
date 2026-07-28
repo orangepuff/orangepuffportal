@@ -22,6 +22,11 @@ public class User
     public int? ParentId { get; private set; }
     public bool IsAdmin { get; private set; }
     public string CultureCode { get; private set; } = DefaultCultureCode;
+    /// <summary>
+    /// Id of the user's selected theme. 0 = no selection (resolve to the Default theme at runtime).
+    /// Not a FK — the Theme module lives in a different schema and must handle its own Default fallback.
+    /// </summary>
+    public int ThemeId { get; private set; }
     public DateTime InsertedTime { get; private set; }
     public DateTime? UpdatedTime { get; private set; }
 
@@ -93,6 +98,12 @@ public class User
     /// and no <see cref="ParentId"/> of its own (one level only), that this user has no children of its own,
     /// and that this user has no rows of its own in SecurityUserRuleItems — this entity cannot see other users.
     /// </summary>
+    public void SetTheme(int themeId, DateTime utcNow)
+    {
+        ThemeId = themeId < 0 ? 0 : themeId;
+        UpdatedTime = utcNow;
+    }
+
     public void SetParent(int? templateUserId, DateTime utcNow)
     {
         if (templateUserId is not null && (templateUserId <= 0 || templateUserId == Id))

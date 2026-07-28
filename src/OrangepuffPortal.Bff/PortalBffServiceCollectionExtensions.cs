@@ -7,6 +7,7 @@ using OrangepuffPortal.Bff.Infrastructure.ConfigGateway;
 using OrangepuffPortal.Bff.Infrastructure.ConfigTextGateway;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 using OrangepuffPortal.Config.Contract.Interfaces;
+using OrangepuffPortal.Theme.Contract.Interfaces;
 using OrangepuffPortal.Shared.Auditing;
 using System.Security.Claims;
 
@@ -165,6 +166,8 @@ namespace OrangepuffPortal.Bff
                         // point to warm ICurrentUserConfig's cache for a Google-authenticated user.
                         var configWarmer = context.HttpContext.RequestServices.GetRequiredService<IUserConfigCacheWarmer>();
                         await configWarmer.WarmAsync(result.UserId!.Value, context.HttpContext.RequestAborted);
+                        var themeWarmer = context.HttpContext.RequestServices.GetRequiredService<IUserThemeCacheWarmer>();
+                        await themeWarmer.WarmAsync(result.UserId!.Value, context.HttpContext.RequestAborted);
                     };
 
                     options.Events.OnRemoteFailure = context =>

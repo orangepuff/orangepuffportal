@@ -8,6 +8,7 @@ using OrangepuffPortal.Bff;
 using OrangepuffPortal.Config.Infrastructure;
 using OrangepuffPortal.ConfigData.Infrastructure;
 using OrangepuffPortal.ConfigText.Infrastructure;
+using OrangepuffPortal.Theme.Infrastructure;
 using OrangepuffPortal.Host.ConfigText;
 using OrangepuffPortal.Host.Infrastructure;
 using OrangepuffPortal.Identity.Infrastructure;
@@ -54,6 +55,7 @@ namespace OrangepuffPortal.Host
             services.AddConfigTextModule(configuration);
             services.AddConfigModule(configuration);
             services.AddConfigDataModule(configuration);
+            services.AddThemeModule(configuration);
             services.AddPortalBff(configuration);
 
             // Runs through the same MigratePortalModulesAsync() pipeline as every other IPortalModule —
