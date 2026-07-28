@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace OrangepuffPortal.ConfigData.Infrastructure;
@@ -12,8 +13,9 @@ internal record ConfigDataCacheRow(int Id, string Key, string? Value, bool? Allo
 /// Caches all ConfigData rows as a single <c>ConfigData:all</c> key in <see cref="IDistributedCache"/>
 /// (Redis when configured, otherwise an in-process fallback). The entire key is invalidated on any
 /// admin write and re-populated on the next read. A 24-hour absolute TTL acts as a safety net.
+/// Redis failures are treated as cache misses and logged as warnings — the app continues without cache.
 /// </summary>
-internal sealed class ConfigDataCache(IDistributedCache distributedCache)
+internal sealed class ConfigDataCache(IDistributedCache distributedCache, ILogger<ConfigDataCache> logger)
 {
     internal const string CacheKey = "ConfigData:all";
 
@@ -22,13 +24,42 @@ internal sealed class ConfigDataCache(IDistributedCache distributedCache)
 
     public async Task<IReadOnlyList<ConfigDataCacheRow>?> GetAsync(CancellationToken cancellationToken = default)
     {
-        var bytes = await distributedCache.GetAsync(CacheKey, cancellationToken);
-        return bytes is null ? null : JsonSerializer.Deserialize<List<ConfigDataCacheRow>>(bytes);
+        try
+        {
+            var bytes = await distributedCache.GetAsync(CacheKey, cancellationToken);
+            return bytes is null ? null : JsonSerializer.Deserialize<List<ConfigDataCacheRow>>(bytes);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("{LogPrefix}: cache read failed — {ExceptionType}: {Message}",
+                nameof(ConfigDataCache) + "." + nameof(GetAsync), ex.GetType().Name, ex.Message);
+            return null;
+        }
     }
 
-    public async Task SetAllAsync(IReadOnlyList<ConfigDataCacheRow> rows, CancellationToken cancellationToken = default) =>
-        await distributedCache.SetAsync(CacheKey, JsonSerializer.SerializeToUtf8Bytes(rows), EntryOptions, cancellationToken);
+    public async Task SetAllAsync(IReadOnlyList<ConfigDataCacheRow> rows, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await distributedCache.SetAsync(CacheKey, JsonSerializer.SerializeToUtf8Bytes(rows), EntryOptions, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("{LogPrefix}: cache write failed — {ExceptionType}: {Message}",
+                nameof(ConfigDataCache) + "." + nameof(SetAllAsync), ex.GetType().Name, ex.Message);
+        }
+    }
 
-    public async Task InvalidateAsync(CancellationToken cancellationToken = default) =>
-        await distributedCache.RemoveAsync(CacheKey, cancellationToken);
+    public async Task InvalidateAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await distributedCache.RemoveAsync(CacheKey, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("{LogPrefix}: cache invalidation failed — {ExceptionType}: {Message}",
+                nameof(ConfigDataCache) + "." + nameof(InvalidateAsync), ex.GetType().Name, ex.Message);
+        }
+    }
 }

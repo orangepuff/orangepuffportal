@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using OrangepuffPortal.ConfigText.Domain.Entity;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -15,7 +16,7 @@ internal record ConfigTextCacheRow(string Module, string TextCode, string Cultur
 /// Caches resolved rows per requested culture in <see cref="IDistributedCache"/> (Redis when
 /// <c>ConnectionStrings:Redis</c> is set, otherwise an in-process fallback). A single write can
 /// change the "*" fallback row consulted by every culture, so <see cref="InvalidateAsync"/> evicts
-/// every cached culture at once.
+/// every cached culture at once. Redis failures are treated as cache misses and logged as warnings.
 /// </summary>
 /// <remarks>
 /// Culture codes that have been loaded are tracked in a per-instance <see cref="ConcurrentDictionary"/>
@@ -23,7 +24,7 @@ internal record ConfigTextCacheRow(string Module, string TextCode, string Cultur
 /// that never served a read for a given culture will not clear that culture's Redis key on invalidate;
 /// the 24-hour absolute expiration acts as a safety-net TTL in that scenario.
 /// </remarks>
-internal sealed class ConfigTextCache(IDistributedCache cache)
+internal sealed class ConfigTextCache(IDistributedCache cache, ILogger<ConfigTextCache> logger)
 {
     private static readonly DistributedCacheEntryOptions EntryOptions =
         new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24) };
@@ -36,15 +37,33 @@ internal sealed class ConfigTextCache(IDistributedCache cache)
         Func<Task<IReadOnlyList<ConfigTextCacheRow>>> factory,
         CancellationToken cancellationToken = default)
     {
-        var bytes = await cache.GetAsync(CacheKey(cultureCode), cancellationToken);
-        if (bytes is not null)
+        try
         {
-            return JsonSerializer.Deserialize<List<ConfigTextCacheRow>>(bytes)!;
+            var bytes = await cache.GetAsync(CacheKey(cultureCode), cancellationToken);
+            if (bytes is not null)
+            {
+                return JsonSerializer.Deserialize<List<ConfigTextCacheRow>>(bytes)!;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("{LogPrefix}: cache read failed — {ExceptionType}: {Message}",
+                nameof(ConfigTextCache) + "." + nameof(GetOrCreateAsync), ex.GetType().Name, ex.Message);
         }
 
         var rows = await factory();
-        await cache.SetAsync(CacheKey(cultureCode), JsonSerializer.SerializeToUtf8Bytes(rows), EntryOptions, cancellationToken);
-        _loadedCultures.TryAdd(cultureCode, true);
+
+        try
+        {
+            await cache.SetAsync(CacheKey(cultureCode), JsonSerializer.SerializeToUtf8Bytes(rows), EntryOptions, cancellationToken);
+            _loadedCultures.TryAdd(cultureCode, true);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("{LogPrefix}: cache write failed — {ExceptionType}: {Message}",
+                nameof(ConfigTextCache) + "." + nameof(GetOrCreateAsync), ex.GetType().Name, ex.Message);
+        }
+
         return rows;
     }
 
@@ -52,9 +71,25 @@ internal sealed class ConfigTextCache(IDistributedCache cache)
     {
         var cultures = _loadedCultures.Keys.ToArray();
         _loadedCultures.Clear();
-        await Task.WhenAll(cultures.Select(c => cache.RemoveAsync(CacheKey(c), cancellationToken)));
-        // Speculatively clear the wildcard culture in case it was cached by another instance.
-        await cache.RemoveAsync(CacheKey(ConfigTextDefinition.WildcardCulture), cancellationToken);
+
+        var tasks = cultures
+            .Select(c => RemoveSafeAsync(CacheKey(c), cancellationToken))
+            .Append(RemoveSafeAsync(CacheKey(ConfigTextDefinition.WildcardCulture), cancellationToken));
+
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task RemoveSafeAsync(string key, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await cache.RemoveAsync(key, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("{LogPrefix}: cache invalidation failed for key '{Key}' — {ExceptionType}: {Message}",
+                nameof(ConfigTextCache) + "." + nameof(InvalidateAsync), key, ex.GetType().Name, ex.Message);
+        }
     }
 
     private static string CacheKey(string cultureCode) => $"ConfigText:{cultureCode}";
