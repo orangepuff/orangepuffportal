@@ -12,10 +12,7 @@ namespace OrangepuffPortal.Config.UnitTests;
 
 public class ConfigUserValueServiceTests
 {
-    private static UserConfigCache NewUserConfigCache() => new(
-        new MemoryCache(new MemoryCacheOptions()),
-        Mock.Of<IDistributedCache>(),
-        NullLogger<UserConfigCache>.Instance);
+    private static UserConfigCache NewUserConfigCache() => new(new MemoryCache(new MemoryCacheOptions()), Mock.Of<IDistributedCache>(), NullLogger<UserConfigCache>.Instance);
 
     [Fact]
     public async Task ApplyDefaultsForNewUserAsync_inserts_a_value_for_a_config_with_a_default()

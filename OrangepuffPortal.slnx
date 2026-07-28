@@ -25,4 +25,8 @@
     <Project Path="tests/unit/OrangepuffPortal.Identity.UnitTests/OrangepuffPortal.Identity.UnitTests.csproj" />
     <Project Path="tests/unit/OrangepuffPortal.Config.UnitTests/OrangepuffPortal.Config.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tests/unit/">
+    <Project Path="tests/unit/OrangepuffPortal.ConfigData.UnitTests/OrangepuffPortal.ConfigData.UnitTests.csproj" />
+    <Project Path="tests/unit/OrangepuffPortal.ConfigText.UnitTests/OrangepuffPortal.ConfigText.UnitTests.csproj" />
+  </Folder>
 </Solution>
