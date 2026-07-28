@@ -7,6 +7,7 @@ using OrangepuffPortal.Bff.Infrastructure.ConfigGateway;
 using OrangepuffPortal.Bff.Infrastructure.ConfigTextGateway;
 using OrangepuffPortal.Bff.Infrastructure.IdentityGateway;
 using OrangepuffPortal.Config.Contract.Interfaces;
+using OrangepuffPortal.Theme.Contract.Interfaces;
 using OrangepuffPortal.Shared.Auditing;
 using System.Security.Claims;
 
@@ -21,10 +22,11 @@ namespace OrangepuffPortal.Bff
         {
             var appName = configuration["Portal:AppName"] ?? throw new InvalidOperationException("Portal:AppName is not configured.");
 
-            // Persisted to a mounted volume (see docker-compose.yml) so keys survive container recreation — without this, every rebuild/restart silently invalidates every signed-in user's auth cookie (it can no longer be decrypted), forcing a fresh login.
+            // Persisted to a configurable path (Portal:DataProtection:KeysPath) so keys survive restarts. Defaults to /keys for Docker (volume-mounted from docker-compose.yml); override in appsettings.Development.json for local VS runs.
+            var keysPath = configuration["Portal:DataProtection:KeysPath"] ?? "/keys";
             services.AddDataProtection()
                 .SetApplicationName(appName)
-                .PersistKeysToFileSystem(new DirectoryInfo("/keys"));
+                .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
             services.AddScoped<IIdentityGateway, IdentityGateway>();
             services.AddScoped<IConfigGateway, ConfigGateway>();
@@ -164,6 +166,8 @@ namespace OrangepuffPortal.Bff
                         // point to warm ICurrentUserConfig's cache for a Google-authenticated user.
                         var configWarmer = context.HttpContext.RequestServices.GetRequiredService<IUserConfigCacheWarmer>();
                         await configWarmer.WarmAsync(result.UserId!.Value, context.HttpContext.RequestAborted);
+                        var themeWarmer = context.HttpContext.RequestServices.GetRequiredService<IUserThemeCacheWarmer>();
+                        await themeWarmer.WarmAsync(result.UserId!.Value, context.HttpContext.RequestAborted);
                     };
 
                     options.Events.OnRemoteFailure = context =>

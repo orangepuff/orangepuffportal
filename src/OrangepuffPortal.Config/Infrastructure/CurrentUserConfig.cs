@@ -15,22 +15,17 @@ internal sealed class CurrentUserConfig(
     UserConfigCache cache,
     ILogger<CurrentUserConfig> logger) : ICurrentUserConfig
 {
-    public int GetInt(string configCode, int fallback = default) =>
-        Find(configCode)?.IConfigValue ?? Fallback(configCode, fallback);
+    public int GetInt(string configCode, int fallback = default) => Find(configCode)?.IConfigValue ?? Fallback(configCode, fallback);
 
-    public decimal GetDecimal(string configCode, decimal fallback = default) =>
-        Find(configCode)?.NConfigValue ?? Fallback(configCode, fallback);
+    public decimal GetDecimal(string configCode, decimal fallback = default) => Find(configCode)?.NConfigValue ?? Fallback(configCode, fallback);
 
-    public bool GetBool(string configCode, bool fallback = default) =>
-        Find(configCode)?.BtConfigValue ?? Fallback(configCode, fallback);
+    public bool GetBool(string configCode, bool fallback = default) => Find(configCode)?.BtConfigValue ?? Fallback(configCode, fallback);
 
-    public string? GetString(string configCode, string? fallback = null) =>
-        Find(configCode)?.SConfigValue ?? fallback;
+    public string? GetString(string configCode, string? fallback = null) => Find(configCode)?.SConfigValue ?? fallback;
 
     public IReadOnlyList<ConfigUserValueDto> GetAll() => Snapshot();
 
-    private ConfigUserValueDto? Find(string configCode) =>
-        Snapshot().FirstOrDefault(value => value.SConfigCode == configCode);
+    private ConfigUserValueDto? Find(string configCode) => Snapshot().FirstOrDefault(value => value.SConfigCode == configCode);
 
     private IReadOnlyList<ConfigUserValueDto> Snapshot()
     {
