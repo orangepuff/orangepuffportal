@@ -1,10 +1,12 @@
 using Diagnostics.Abstractions.Interfaces;
 using Diagnostics.NLog.Transactions;
 using MediatR;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OrangepuffPortal.Bff;
 using OrangepuffPortal.Config.Infrastructure;
+using OrangepuffPortal.ConfigData.Infrastructure;
 using OrangepuffPortal.ConfigText.Infrastructure;
 using OrangepuffPortal.Host.ConfigText;
 using OrangepuffPortal.Host.Infrastructure;
@@ -26,6 +28,22 @@ namespace OrangepuffPortal.Host
             services.AddScoped<ICurrentUser, CurrentUser>();
             services.AddScoped<IUserDirectory, UserDirectory>();
 
+            // Distributed cache: Redis when CacheConfigurations:RedisConfiguration:ConnectionString
+            // is provided, otherwise an in-process fallback so environments without Redis still work.
+            var redisConnectionString = configuration["CacheConfigurations:RedisConfiguration:ConnectionString"];
+            if (!string.IsNullOrEmpty(redisConnectionString))
+            {
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = redisConnectionString;
+                    options.InstanceName = "portal:";
+                });
+            }
+            else
+            {
+                services.AddDistributedMemoryCache();
+            }
+
             // Auto-stamp every transaction span with the current request's user (overrides the base registration from AddDiagnostics; scoped because ICurrentUser is scoped).
             services.AddScoped<ITransactionLogger>(sp => new RequestContextTransactionLogger(
                 sp.GetRequiredService<TransactionLoggerImplementation>(),
@@ -35,6 +53,7 @@ namespace OrangepuffPortal.Host
             services.AddIdentityModule(configuration);
             services.AddConfigTextModule(configuration);
             services.AddConfigModule(configuration);
+            services.AddConfigDataModule(configuration);
             services.AddPortalBff(configuration);
 
             // Runs through the same MigratePortalModulesAsync() pipeline as every other IPortalModule —

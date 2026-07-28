@@ -1,4 +1,11 @@
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: orangepuffportal-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   host:
     build:
       context: .
@@ -12,6 +19,7 @@ services:
       Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID}"
       Authentication__Google__ClientSecret: "${GOOGLE_CLIENT_SECRET}"
       Seed__AdminPassword: "${SEED_ADMIN_PASSWORD}"
+      CacheConfigurations__RedisConfiguration__ConnectionString: "redis:6379"
     ports:
       - "7100:8081"
     volumes:
@@ -19,3 +27,6 @@ services:
       - ./data-protection-keys:/keys
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_started

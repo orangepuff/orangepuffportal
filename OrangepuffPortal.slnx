@@ -13,6 +13,8 @@
     <Project Path="src/OrangepuffPortal.ConfigText/OrangepuffPortal.ConfigText.csproj" />
     <Project Path="src/OrangepuffPortal.Config.Contract/OrangepuffPortal.Config.Contract.csproj" />
     <Project Path="src/OrangepuffPortal.Config/OrangepuffPortal.Config.csproj" />
+    <Project Path="src/OrangepuffPortal.ConfigData.Contract/OrangepuffPortal.ConfigData.Contract.csproj" />
+    <Project Path="src/OrangepuffPortal.ConfigData/OrangepuffPortal.ConfigData.csproj" />
     <Project Path="src/OrangepuffPortal.Bff/OrangepuffPortal.Bff.csproj" />
     <Project Path="src/OrangepuffPortal.Host/OrangepuffPortal.Host.csproj" />
   </Folder>
@@ -22,5 +24,9 @@
   <Folder Name="/tests/">
     <Project Path="tests/unit/OrangepuffPortal.Identity.UnitTests/OrangepuffPortal.Identity.UnitTests.csproj" />
     <Project Path="tests/unit/OrangepuffPortal.Config.UnitTests/OrangepuffPortal.Config.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/unit/">
+    <Project Path="tests/unit/OrangepuffPortal.ConfigData.UnitTests/OrangepuffPortal.ConfigData.UnitTests.csproj" />
+    <Project Path="tests/unit/OrangepuffPortal.ConfigText.UnitTests/OrangepuffPortal.ConfigText.UnitTests.csproj" />
   </Folder>
 </Solution>

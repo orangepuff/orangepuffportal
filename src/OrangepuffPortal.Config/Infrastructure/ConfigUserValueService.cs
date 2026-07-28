@@ -89,7 +89,7 @@ internal class ConfigUserValueService(
 
         // Otherwise ICurrentUserConfig would keep serving the pre-update value out of the cache warmed
         // at this user's login until the cache entry's sliding expiration lapses.
-        userConfigCache.Invalidate(userId);
+        await userConfigCache.InvalidateAsync(userId, cancellationToken);
     }
 
     public async Task ApplyDefaultsForNewUserAsync(int userId, int actorUserId, CancellationToken cancellationToken = default)

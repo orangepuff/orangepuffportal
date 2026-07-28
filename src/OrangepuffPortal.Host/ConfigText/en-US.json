@@ -115,6 +115,22 @@
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.config.item.valueType.decimal", "sTextType": "lbl", "sText": "Decimal" },
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.config.item.valueType.boolean", "sTextType": "lbl", "sText": "Boolean" },
 
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.title", "sTextType": "lbl", "sText": "Config App" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.addButton", "sTextType": "lbl", "sText": "Add entry" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.column.key", "sTextType": "lbl", "sText": "Key" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.column.value", "sTextType": "lbl", "sText": "Value" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.column.allowEditByScreen", "sTextType": "lbl", "sText": "Editable by screen" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.msg.addFailed", "sTextType": "msg", "sText": "Could not add entry" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.msg.updateFailed", "sTextType": "msg", "sText": "Could not update entry" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.msg.deleteFailed", "sTextType": "msg", "sText": "Could not delete entry" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.confirmDelete.title", "sTextType": "msg", "sText": "Delete entry" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.confirmDelete.message", "sTextType": "msg", "sText": "Delete entry \"{0}\"?" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.form.title.add", "sTextType": "lbl", "sText": "Add entry" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.form.title.edit", "sTextType": "lbl", "sText": "Edit entry" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.form.key", "sTextType": "lbl", "sText": "Key" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.form.value", "sTextType": "lbl", "sText": "Value" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configData.form.allowEditByScreen", "sTextType": "lbl", "sText": "Allow edit by screen" },
+
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configText.title", "sTextType": "lbl", "sText": "Config text" },
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configText.addButton", "sTextType": "lbl", "sText": "Add text" },
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "admin.configText.filter.cultureCode", "sTextType": "lbl", "sText": "Culture code" },
@@ -144,6 +160,7 @@
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "header.menu.manageThemes", "sTextType": "lbl", "sText": "Manage themes" },
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "header.menu.manageConfig", "sTextType": "lbl", "sText": "Manage config" },
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "header.menu.manageConfigText", "sTextType": "lbl", "sText": "Manage config text" },
+  { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "header.menu.manageConfigData", "sTextType": "lbl", "sText": "Config App" },
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "header.signOut", "sTextType": "lbl", "sText": "Sign out" },
 
   { "sModule": "OrangepuffPortal.Frontend", "sTextCode": "landing.signInWithGoogle", "sTextType": "lbl", "sText": "Sign in with Google" },
@@ -200,6 +217,12 @@
   { "sModule": "OrangepuffPortal.Config", "sTextCode": "config_created", "sTextType": "msg", "sText": "Config created." },
   { "sModule": "OrangepuffPortal.Config", "sTextCode": "config_updated", "sTextType": "msg", "sText": "Config updated." },
   { "sModule": "OrangepuffPortal.Config", "sTextCode": "config_deleted", "sTextType": "msg", "sText": "Config deleted." },
+
+  { "sModule": "OrangepuffPortal.ConfigData", "sTextCode": "duplicate_key", "sTextType": "msg", "sText": "An entry with this key already exists." },
+  { "sModule": "OrangepuffPortal.ConfigData", "sTextCode": "not_found", "sTextType": "msg", "sText": "The requested entry could not be found." },
+  { "sModule": "OrangepuffPortal.ConfigData", "sTextCode": "configdata_created", "sTextType": "msg", "sText": "Entry created." },
+  { "sModule": "OrangepuffPortal.ConfigData", "sTextCode": "configdata_updated", "sTextType": "msg", "sText": "Entry updated." },
+  { "sModule": "OrangepuffPortal.ConfigData", "sTextCode": "configdata_deleted", "sTextType": "msg", "sText": "Entry deleted." },
 
   { "sModule": "OrangepuffPortal.ConfigText", "sTextCode": "duplicate_key", "sTextType": "msg", "sText": "A text entry with this module/text code/culture/type already exists." },
   { "sModule": "OrangepuffPortal.ConfigText", "sTextCode": "not_found", "sTextType": "msg", "sText": "The requested text entry could not be found." },
