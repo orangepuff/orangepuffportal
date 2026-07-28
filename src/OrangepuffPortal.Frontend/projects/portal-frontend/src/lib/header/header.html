@@ -44,6 +44,10 @@
           <mat-icon>translate</mat-icon>
           {{ 'header.menu.manageConfigText' | translate:module }}
         </a>
+        <a mat-menu-item routerLink="/admin/config-data">
+          <mat-icon>storage</mat-icon>
+          {{ 'header.menu.manageConfigData' | translate:module }}
+        </a>
       }
 
       <button mat-menu-item type="button" (click)="signOut()">

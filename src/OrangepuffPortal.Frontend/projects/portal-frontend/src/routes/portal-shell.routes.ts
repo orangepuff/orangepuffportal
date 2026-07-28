@@ -58,6 +58,11 @@ export const PORTAL_SHELL_ROUTES: Route[] = [
     loadComponent: () => import('../lib/admin/config-text/config-text-list/config-text-list').then((m) => m.ConfigTextList)
   },
   {
+    path: 'admin/config-data',
+    canActivate: [adminGuard],
+    loadComponent: () => import('../lib/admin/config-data/config-data-list/config-data-list').then((m) => m.ConfigDataList)
+  },
+  {
     path: 'Users/:userId/Settings',
     canActivate: [ownUserOrAdminGuard],
     loadComponent: () => import('../lib/settings/settings-page').then((m) => m.SettingsPage)
