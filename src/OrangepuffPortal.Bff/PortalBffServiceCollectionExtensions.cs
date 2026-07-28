@@ -21,10 +21,11 @@ namespace OrangepuffPortal.Bff
         {
             var appName = configuration["Portal:AppName"] ?? throw new InvalidOperationException("Portal:AppName is not configured.");
 
-            // Persisted to a mounted volume (see docker-compose.yml) so keys survive container recreation — without this, every rebuild/restart silently invalidates every signed-in user's auth cookie (it can no longer be decrypted), forcing a fresh login.
+            // Persisted to a configurable path (Portal:DataProtection:KeysPath) so keys survive restarts. Defaults to /keys for Docker (volume-mounted from docker-compose.yml); override in appsettings.Development.json for local VS runs.
+            var keysPath = configuration["Portal:DataProtection:KeysPath"] ?? "/keys";
             services.AddDataProtection()
                 .SetApplicationName(appName)
-                .PersistKeysToFileSystem(new DirectoryInfo("/keys"));
+                .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
             services.AddScoped<IIdentityGateway, IdentityGateway>();
             services.AddScoped<IConfigGateway, ConfigGateway>();
