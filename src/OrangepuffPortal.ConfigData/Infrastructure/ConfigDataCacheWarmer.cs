@@ -8,9 +8,8 @@ namespace OrangepuffPortal.ConfigData.Infrastructure;
 
 /// <summary>
 /// Eagerly populates <see cref="ConfigDataCache"/> from the DB during application startup so the
-/// cache is hot before the first request arrives. Runs on every app start and app pool recycle,
-/// regardless of the <c>DoMigration</c> flag. Skips gracefully if pending migrations indicate the
-/// schema is not yet ready (e.g. when <c>DoMigration</c> is false on first run).
+/// cache is hot before the first request arrives. Skips gracefully (logs a warning) when the schema
+/// is not yet ready — either because migrations are pending or the DB is in an inconsistent state.
 /// </summary>
 internal sealed class ConfigDataCacheWarmer(
     IServiceScopeFactory scopeFactory,
@@ -31,12 +30,19 @@ internal sealed class ConfigDataCacheWarmer(
             return;
         }
 
-        var repository = scope.ServiceProvider.GetRequiredService<IConfigDataRepository>();
-        var all = await repository.GetAllAsync(cancellationToken);
-        var rows = all.Select(e => new ConfigDataCacheRow(e.Id, e.Key, e.Value, e.AllowEditByScreen, e.Description)).ToList();
-        await cache.SetAllAsync(rows, cancellationToken);
+        try
+        {
+            var repository = scope.ServiceProvider.GetRequiredService<IConfigDataRepository>();
+            var all = await repository.GetAllAsync(cancellationToken);
+            var rows = all.Select(e => new ConfigDataCacheRow(e.Id, e.Key, e.Value, e.AllowEditByScreen, e.Description)).ToList();
+            await cache.SetAllAsync(rows, cancellationToken);
 
-        logger.LogInformation("{LogPrefix}: warmed {Count} ConfigData entries", LogPrefix, rows.Count);
+            logger.LogInformation("{LogPrefix}: warmed {Count} ConfigData entries", LogPrefix, rows.Count);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("{LogPrefix}: skipping warm-up — {ExceptionType}: {Message}", LogPrefix, ex.GetType().Name, ex.Message);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
