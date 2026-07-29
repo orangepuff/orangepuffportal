@@ -35,10 +35,12 @@ export class ThemeApplyService {
     );
   }
 
-  /** Removes all --op-* custom properties from :root and clears the current-theme signal. */
+  /** Removes all --op-* and --mat-sys-* custom properties from :root and clears the current-theme signal. */
   clear(): void {
     const root = document.documentElement;
-    const toRemove = Array.from(root.style).filter(p => p.startsWith(ThemeApplyService.VAR_PREFIX));
+    const toRemove = Array.from(root.style).filter(p =>
+      p.startsWith(ThemeApplyService.VAR_PREFIX) || p.startsWith('--mat-sys-')
+    );
     toRemove.forEach(p => root.style.removeProperty(p));
     this.currentTheme.set(null);
   }
